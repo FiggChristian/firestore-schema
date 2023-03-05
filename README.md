@@ -1,0 +1,1 @@
+# typed-firestore-schema
