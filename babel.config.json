@@ -1,0 +1,54 @@
+{
+  "env": {
+    "esm": {
+      "presets": [
+        [
+          "@babel/preset-env",
+          {
+            "targets": {
+              "node": "current",
+              "esmodules": true
+            },
+            "modules": false,
+            "useBuiltIns": "usage",
+            "corejs": {
+              "version": "3.8",
+              "proposals": true
+            }
+          }
+        ],
+        [
+          "@babel/preset-typescript",
+          {
+            "allowDeclareFields": true
+          }
+        ]
+      ]
+    },
+    "cjs": {
+      "presets": [
+        [
+          "@babel/preset-env",
+          {
+            "targets": {
+              "node": "current",
+              "esmodules": false
+            },
+            "modules": "commonjs",
+            "useBuiltIns": "usage",
+            "corejs": {
+              "version": "3.8",
+              "proposals": true
+            }
+          }
+        ],
+        [
+          "@babel/preset-typescript",
+          {
+            "allowDeclareFields": true
+          }
+        ]
+      ]
+    }
+  }
+}
