@@ -6,5 +6,5 @@ export var makePath = firestore => {
   return new Path(firestore);
 };
 export var path = makePath;
-export { Path, DocumentWrapper, CollectionWrapper, QueryWrapper };
+export { CollectionWrapper, DocumentWrapper, Path, QueryWrapper };
 export default makePath;

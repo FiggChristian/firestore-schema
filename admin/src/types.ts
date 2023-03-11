@@ -11,7 +11,7 @@ import type {
  * document is an object that can hold nested collections as keys, so the
  * document's schema must be accessed via this special Symbol.
  */
-export const DOCUMENT_SCHEMA = Symbol("DOCUMENT_SCHEMA");
+export const DOCUMENT_SCHEMA = Symbol.for("DOCUMENT_SCHEMA");
 /**
  * A Symbol used for accessing the schema of documents in the database. Each
  * document is an object that can hold nested collections as keys, so the
@@ -58,17 +58,30 @@ export interface GenericFirestoreSchema {
  */
 export type NestedDocumentIndexByPath<
   Document extends GenericFirestoreDocument,
-  Path extends string
+  Path extends string,
+  AllowWildcard extends true | false
 > = Path extends ""
   ? Document
   : Path extends `${infer CollectionName}/${infer Rest}`
   ? CollectionName extends `{${string}}`
-    ? IndexAllCollectionsInDocument<Document, Rest>
+    ? AllowWildcard extends true
+      ? IndexAllCollectionsInDocument<Document, Rest>
+      : CollectionName extends StrKeyof<Document>
+      ? NestedCollectionIndexByPath<
+          Document[CollectionName],
+          Rest,
+          AllowWildcard
+        >
+      : never
     : CollectionName extends StrKeyof<Document>
-    ? NestedCollectionIndexByPath<Document[CollectionName], Rest>
+    ? NestedCollectionIndexByPath<Document[CollectionName], Rest, AllowWildcard>
     : never
   : Path extends `{${string}}`
-  ? IndexAllCollectionsInDocument<Document, "">
+  ? AllowWildcard extends true
+    ? IndexAllCollectionsInDocument<Document, "">
+    : Path extends StrKeyof<Document>
+    ? Document[Path]
+    : never
   : Path extends StrKeyof<Document>
   ? Document[Path]
   : never;
@@ -76,15 +89,14 @@ export type NestedDocumentIndexByPath<
 export type IndexAllCollectionsInDocument<
   Document extends Omit<GenericFirestoreDocument, DOCUMENT_SCHEMA>,
   Rest extends string
-> = Document extends {
-  [_ in infer CollectionNames]: unknown;
-}
+> = Document extends Omit<GenericFirestoreDocument, DOCUMENT_SCHEMA>
   ? {
-      [CollectionName in CollectionNames]: NestedCollectionIndexByPath<
+      [CollectionName in StrKeyof<Document>]: NestedCollectionIndexByPath<
         Document[CollectionName],
-        Rest
+        Rest,
+        true
       >;
-    }[Exclude<CollectionNames, DOCUMENT_SCHEMA>]
+    }[StrKeyof<Document>]
   : never;
 
 /**
@@ -94,17 +106,26 @@ export type IndexAllCollectionsInDocument<
  */
 export type NestedCollectionIndexByPath<
   Collection extends GenericFirestoreCollection,
-  Path extends string
+  Path extends string,
+  AllowWildcard extends true | false
 > = Path extends ""
   ? Collection
   : Path extends `${infer DocumentName}/${infer Rest}`
   ? DocumentName extends `{${string}}`
-    ? IndexAllDocumentsInCollection<Collection, Rest>
+    ? AllowWildcard extends true
+      ? IndexAllDocumentsInCollection<Collection, Rest>
+      : DocumentName extends StrKeyof<Collection>
+      ? NestedDocumentIndexByPath<Collection[DocumentName], Rest, AllowWildcard>
+      : never
     : DocumentName extends StrKeyof<Collection>
-    ? NestedDocumentIndexByPath<Collection[DocumentName], Rest>
+    ? NestedDocumentIndexByPath<Collection[DocumentName], Rest, AllowWildcard>
     : never
   : Path extends `{${string}}`
-  ? IndexAllDocumentsInCollection<Collection, "">
+  ? AllowWildcard extends true
+    ? IndexAllDocumentsInCollection<Collection, "">
+    : Path extends StrKeyof<Collection>
+    ? Collection[Path]
+    : never
   : Path extends StrKeyof<Collection>
   ? Collection[Path]
   : never;
@@ -118,7 +139,8 @@ export type IndexAllDocumentsInCollection<
   ? {
       [DocumentName in DocumentNames]: NestedDocumentIndexByPath<
         Collection[DocumentName],
-        Rest
+        Rest,
+        true
       >;
     }[DocumentNames]
   : never;
@@ -145,12 +167,31 @@ export type IndexAllDocumentsInCollection<
  */
 export type IndexByPath<
   FirestoreSchema extends GenericFirestoreSchema,
-  Path extends string
+  Path extends string,
+  AllowWildcard extends true | false
 > = Path extends `${infer CollectionName}/${infer Rest}`
   ? CollectionName extends `{${string}}`
-    ? IndexAllCollectionsInDocument<FirestoreSchema, Rest>
+    ? AllowWildcard extends true
+      ? IndexAllCollectionsInDocument<FirestoreSchema, Rest>
+      : CollectionName extends StrKeyof<FirestoreSchema>
+      ? NestedCollectionIndexByPath<
+          FirestoreSchema[CollectionName],
+          Rest,
+          AllowWildcard
+        >
+      : never
     : CollectionName extends StrKeyof<FirestoreSchema>
-    ? NestedCollectionIndexByPath<FirestoreSchema[CollectionName], Rest>
+    ? NestedCollectionIndexByPath<
+        FirestoreSchema[CollectionName],
+        Rest,
+        AllowWildcard
+      >
+    : never
+  : Path extends `{${string}}`
+  ? AllowWildcard extends true
+    ? IndexAllCollectionsInDocument<FirestoreSchema, "">
+    : Path extends StrKeyof<FirestoreSchema>
+    ? FirestoreSchema[Path]
     : never
   : Path extends StrKeyof<FirestoreSchema>
   ? FirestoreSchema[Path]
@@ -158,8 +199,13 @@ export type IndexByPath<
 
 export type SchemaAtPath<
   FirestoreSchema extends GenericFirestoreSchema,
-  Path extends string
-> = IndexByPath<FirestoreSchema, Path> extends infer IndexedObject
+  Path extends string,
+  AllowWildcard extends true | false
+> = IndexByPath<
+  FirestoreSchema,
+  Path,
+  AllowWildcard
+> extends infer IndexedObject
   ? IndexedObject extends GenericFirestoreDocument
     ? IndexedObject[typeof DOCUMENT_SCHEMA]
     : IndexedObject extends GenericFirestoreCollection
@@ -398,7 +444,7 @@ export type SettableFirestoreDataType = ValueOrArray<
 export type GettableDocumentSchema<Document extends GenericFirestoreDocument> =
   Expand<
     ConvertDocumentSchemaType<
-      ConvertDocumentSchemaType<Document[DOCUMENT_SCHEMA], Date, Timestamp>,
+      ConvertDocumentSchemaType<SchemaOfDocument<Document>, Date, Timestamp>,
       Uint8Array,
       Buffer
     >
@@ -407,7 +453,7 @@ export type SettableDocumentSchema<Document extends GenericFirestoreDocument> =
   Expand<
     ConvertDocumentSchemaType<
       ConvertDocumentSchemaType<
-        Document[DOCUMENT_SCHEMA],
+        SchemaOfDocument<Document>,
         Date | Timestamp,
         Date | Timestamp
       >,
@@ -415,3 +461,58 @@ export type SettableDocumentSchema<Document extends GenericFirestoreDocument> =
       Uint8Array | Buffer
     >
   >;
+
+export type DocumentsIn<Collection extends GenericFirestoreCollection> =
+  Collection extends GenericFirestoreCollection ? Collection[string] : never;
+
+export type SubcollectionsIn<Document extends GenericFirestoreDocument> =
+  Document extends GenericFirestoreDocument
+    ? Document[StrKeyof<Document>]
+    : never;
+
+export type SchemaKeysOf<Document extends GenericFirestoreDocument> =
+  Document extends GenericFirestoreDocument
+    ? SchemaOfDocument<Document> extends infer R
+      ? R extends object
+        ? string extends StrKeyof<R>
+          ? never
+          : StrKeyof<R>
+        : never
+      : never
+    : never;
+
+export type SchemaOfDocument<Document extends GenericFirestoreDocument> =
+  Document[DOCUMENT_SCHEMA];
+
+export type SchemaOfCollection<Collection extends GenericFirestoreCollection> =
+  SchemaOfDocument<DocumentsIn<Collection>>;
+
+/**
+ * Expands a union of single-item tuples, which can themselves contain
+ * intersections, into an intersection of each tuple's items. This is used for
+ * grouping intersections of intersections, and only intersecting the first
+ * layer.
+ *
+ * @example
+ * ```ts
+ * type Foo = UnionOfTuplesToIntersection<
+ *   | [{ foo: 1 } | { foo: 2 }]
+ *   | [{ bar: 3 }]
+ * >)
+ * // Intersects the outer group only, but keeps inner unions:
+ * // ({ foo: 1 } | { foo: 2 }) & { bar: 3 }
+ * // which evaluates to:
+ * // { foo: 1 | 2, bar: 3 }
+ * ```
+ *
+ * This is distinct from `UnionToIntersection` in that it lets you maintain
+ * "inner" intersections by wrapping them in `[]` so that they don't also become
+ * intersected.
+ */
+export type UnionOfTuplesToIntersection<U> = (
+  U extends [infer T] ? (k: T) => void : (k: U) => void
+) extends (k: infer I) => void
+  ? I
+  : never;
+
+export type DefaultIfNever<T, Default> = [T] extends [never] ? Default : T;

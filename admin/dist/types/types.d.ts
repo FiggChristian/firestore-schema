@@ -48,22 +48,20 @@ export interface GenericFirestoreSchema {
  * relative from a given document. This is used by `IndexByPath` for recursive
  * indexing.
  */
-export type NestedDocumentIndexByPath<Document extends GenericFirestoreDocument, Path extends string> = Path extends "" ? Document : Path extends `${infer CollectionName}/${infer Rest}` ? CollectionName extends `{${string}}` ? IndexAllCollectionsInDocument<Document, Rest> : CollectionName extends StrKeyof<Document> ? NestedCollectionIndexByPath<Document[CollectionName], Rest> : never : Path extends `{${string}}` ? IndexAllCollectionsInDocument<Document, ""> : Path extends StrKeyof<Document> ? Document[Path] : never;
-export type IndexAllCollectionsInDocument<Document extends Omit<GenericFirestoreDocument, DOCUMENT_SCHEMA>, Rest extends string> = Document extends {
-    [_ in infer CollectionNames]: unknown;
-} ? {
-    [CollectionName in CollectionNames]: NestedCollectionIndexByPath<Document[CollectionName], Rest>;
-}[Exclude<CollectionNames, DOCUMENT_SCHEMA>] : never;
+export type NestedDocumentIndexByPath<Document extends GenericFirestoreDocument, Path extends string, AllowWildcard extends true | false> = Path extends "" ? Document : Path extends `${infer CollectionName}/${infer Rest}` ? CollectionName extends `{${string}}` ? AllowWildcard extends true ? IndexAllCollectionsInDocument<Document, Rest> : CollectionName extends StrKeyof<Document> ? NestedCollectionIndexByPath<Document[CollectionName], Rest, AllowWildcard> : never : CollectionName extends StrKeyof<Document> ? NestedCollectionIndexByPath<Document[CollectionName], Rest, AllowWildcard> : never : Path extends `{${string}}` ? AllowWildcard extends true ? IndexAllCollectionsInDocument<Document, ""> : Path extends StrKeyof<Document> ? Document[Path] : never : Path extends StrKeyof<Document> ? Document[Path] : never;
+export type IndexAllCollectionsInDocument<Document extends Omit<GenericFirestoreDocument, DOCUMENT_SCHEMA>, Rest extends string> = Document extends Omit<GenericFirestoreDocument, DOCUMENT_SCHEMA> ? {
+    [CollectionName in StrKeyof<Document>]: NestedCollectionIndexByPath<Document[CollectionName], Rest, true>;
+}[StrKeyof<Document>] : never;
 /**
  * A type used for indexing into the database schema with a string path,
  * relative from a given collection. This is used by `IndexByPath` for recursive
  * indexing.
  */
-export type NestedCollectionIndexByPath<Collection extends GenericFirestoreCollection, Path extends string> = Path extends "" ? Collection : Path extends `${infer DocumentName}/${infer Rest}` ? DocumentName extends `{${string}}` ? IndexAllDocumentsInCollection<Collection, Rest> : DocumentName extends StrKeyof<Collection> ? NestedDocumentIndexByPath<Collection[DocumentName], Rest> : never : Path extends `{${string}}` ? IndexAllDocumentsInCollection<Collection, ""> : Path extends StrKeyof<Collection> ? Collection[Path] : never;
+export type NestedCollectionIndexByPath<Collection extends GenericFirestoreCollection, Path extends string, AllowWildcard extends true | false> = Path extends "" ? Collection : Path extends `${infer DocumentName}/${infer Rest}` ? DocumentName extends `{${string}}` ? AllowWildcard extends true ? IndexAllDocumentsInCollection<Collection, Rest> : DocumentName extends StrKeyof<Collection> ? NestedDocumentIndexByPath<Collection[DocumentName], Rest, AllowWildcard> : never : DocumentName extends StrKeyof<Collection> ? NestedDocumentIndexByPath<Collection[DocumentName], Rest, AllowWildcard> : never : Path extends `{${string}}` ? AllowWildcard extends true ? IndexAllDocumentsInCollection<Collection, ""> : Path extends StrKeyof<Collection> ? Collection[Path] : never : Path extends StrKeyof<Collection> ? Collection[Path] : never;
 export type IndexAllDocumentsInCollection<Collection extends GenericFirestoreCollection, Rest extends string> = Collection extends {
     [_ in infer DocumentNames]: GenericFirestoreDocument;
 } ? {
-    [DocumentName in DocumentNames]: NestedDocumentIndexByPath<Collection[DocumentName], Rest>;
+    [DocumentName in DocumentNames]: NestedDocumentIndexByPath<Collection[DocumentName], Rest, true>;
 }[DocumentNames] : never;
 /**
  * A type used for indexing into the database schema with a string path. It
@@ -85,8 +83,8 @@ export type IndexAllDocumentsInCollection<Collection extends GenericFirestoreCol
  * // Returns the schema of the `users/uid/restricted/profile` document.
  * ```
  */
-export type IndexByPath<FirestoreSchema extends GenericFirestoreSchema, Path extends string> = Path extends `${infer CollectionName}/${infer Rest}` ? CollectionName extends `{${string}}` ? IndexAllCollectionsInDocument<FirestoreSchema, Rest> : CollectionName extends StrKeyof<FirestoreSchema> ? NestedCollectionIndexByPath<FirestoreSchema[CollectionName], Rest> : never : Path extends StrKeyof<FirestoreSchema> ? FirestoreSchema[Path] : never;
-export type SchemaAtPath<FirestoreSchema extends GenericFirestoreSchema, Path extends string> = IndexByPath<FirestoreSchema, Path> extends infer IndexedObject ? IndexedObject extends GenericFirestoreDocument ? IndexedObject[typeof DOCUMENT_SCHEMA] : IndexedObject extends GenericFirestoreCollection ? {
+export type IndexByPath<FirestoreSchema extends GenericFirestoreSchema, Path extends string, AllowWildcard extends true | false> = Path extends `${infer CollectionName}/${infer Rest}` ? CollectionName extends `{${string}}` ? AllowWildcard extends true ? IndexAllCollectionsInDocument<FirestoreSchema, Rest> : CollectionName extends StrKeyof<FirestoreSchema> ? NestedCollectionIndexByPath<FirestoreSchema[CollectionName], Rest, AllowWildcard> : never : CollectionName extends StrKeyof<FirestoreSchema> ? NestedCollectionIndexByPath<FirestoreSchema[CollectionName], Rest, AllowWildcard> : never : Path extends `{${string}}` ? AllowWildcard extends true ? IndexAllCollectionsInDocument<FirestoreSchema, ""> : Path extends StrKeyof<FirestoreSchema> ? FirestoreSchema[Path] : never : Path extends StrKeyof<FirestoreSchema> ? FirestoreSchema[Path] : never;
+export type SchemaAtPath<FirestoreSchema extends GenericFirestoreSchema, Path extends string, AllowWildcard extends true | false> = IndexByPath<FirestoreSchema, Path, AllowWildcard> extends infer IndexedObject ? IndexedObject extends GenericFirestoreDocument ? IndexedObject[typeof DOCUMENT_SCHEMA] : IndexedObject extends GenericFirestoreCollection ? {
     [DocumentName in StrKeyof<IndexedObject>]: IndexedObject[DocumentName][DOCUMENT_SCHEMA];
 }[StrKeyof<IndexedObject>] : never : never;
 /**
@@ -221,6 +219,35 @@ export type GettableFirestoreDataType = ValueOrArray<GettableFirestoreDataTypeNo
  * The value types that be uploaded to Firestore in a document's fields.
  */
 export type SettableFirestoreDataType = ValueOrArray<GettableFirestoreDataTypeNoArray | Date | Uint8Array | FieldValue>;
-export type GettableDocumentSchema<Document extends GenericFirestoreDocument> = Expand<ConvertDocumentSchemaType<ConvertDocumentSchemaType<Document[DOCUMENT_SCHEMA], Date, Timestamp>, Uint8Array, Buffer>>;
-export type SettableDocumentSchema<Document extends GenericFirestoreDocument> = Expand<ConvertDocumentSchemaType<ConvertDocumentSchemaType<Document[DOCUMENT_SCHEMA], Date | Timestamp, Date | Timestamp>, Uint8Array | Buffer, Uint8Array | Buffer>>;
+export type GettableDocumentSchema<Document extends GenericFirestoreDocument> = Expand<ConvertDocumentSchemaType<ConvertDocumentSchemaType<SchemaOfDocument<Document>, Date, Timestamp>, Uint8Array, Buffer>>;
+export type SettableDocumentSchema<Document extends GenericFirestoreDocument> = Expand<ConvertDocumentSchemaType<ConvertDocumentSchemaType<SchemaOfDocument<Document>, Date | Timestamp, Date | Timestamp>, Uint8Array | Buffer, Uint8Array | Buffer>>;
+export type DocumentsIn<Collection extends GenericFirestoreCollection> = Collection extends GenericFirestoreCollection ? Collection[string] : never;
+export type SubcollectionsIn<Document extends GenericFirestoreDocument> = Document extends GenericFirestoreDocument ? Document[StrKeyof<Document>] : never;
+export type SchemaKeysOf<Document extends GenericFirestoreDocument> = Document extends GenericFirestoreDocument ? SchemaOfDocument<Document> extends infer R ? R extends object ? string extends StrKeyof<R> ? never : StrKeyof<R> : never : never : never;
+export type SchemaOfDocument<Document extends GenericFirestoreDocument> = Document[DOCUMENT_SCHEMA];
+export type SchemaOfCollection<Collection extends GenericFirestoreCollection> = SchemaOfDocument<DocumentsIn<Collection>>;
+/**
+ * Expands a union of single-item tuples, which can themselves contain
+ * intersections, into an intersection of each tuple's items. This is used for
+ * grouping intersections of intersections, and only intersecting the first
+ * layer.
+ *
+ * @example
+ * ```ts
+ * type Foo = UnionOfTuplesToIntersection<
+ *   | [{ foo: 1 } | { foo: 2 }]
+ *   | [{ bar: 3 }]
+ * >)
+ * // Intersects the outer group only, but keeps inner unions:
+ * // ({ foo: 1 } | { foo: 2 }) & { bar: 3 }
+ * // which evaluates to:
+ * // { foo: 1 | 2, bar: 3 }
+ * ```
+ *
+ * This is distinct from `UnionToIntersection` in that it lets you maintain
+ * "inner" intersections by wrapping them in `[]` so that they don't also become
+ * intersected.
+ */
+export type UnionOfTuplesToIntersection<U> = (U extends [infer T] ? (k: T) => void : (k: U) => void) extends (k: infer I) => void ? I : never;
+export type DefaultIfNever<T, Default> = [T] extends [never] ? Default : T;
 export {};

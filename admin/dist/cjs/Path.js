@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 var _CollectionWrapper = _interopRequireDefault(require("./CollectionWrapper"));
 var _DocumentWrapper = _interopRequireDefault(require("./DocumentWrapper"));
-var _QueryWrapper = _interopRequireDefault(require("./QueryWrapper"));
+var _CollectionGroupWrapper = _interopRequireDefault(require("./CollectionGroupWrapper"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 class Path {
   /**
@@ -17,6 +17,8 @@ class Path {
     this.firestore = firestore;
   }
   castToSchema(value) {
+    // This function is purely to tell TypeScript the type of the passed-in
+    // value, but the value itself is not used. We can just return it as-is.
     return value;
   }
 
@@ -95,7 +97,7 @@ class Path {
    */
 
   collectionGroup(collectionId) {
-    return new _QueryWrapper.default(this.firestore.collectionGroup(collectionId));
+    return new _CollectionGroupWrapper.default(this.firestore.collectionGroup(collectionId));
   }
 }
 var _default = Path;

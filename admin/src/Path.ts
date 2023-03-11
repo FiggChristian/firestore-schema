@@ -1,8 +1,10 @@
 import type {
   CollectionGroup,
   CollectionReference,
+  DocumentData,
   DocumentReference,
   DocumentSnapshot,
+  Query,
 } from "firebase-admin/firestore";
 import type {
   Expand,
@@ -18,7 +20,7 @@ import type {
 } from "./types";
 import CollectionWrapper from "./CollectionWrapper";
 import DocumentWrapper from "./DocumentWrapper";
-import QueryWrapper from "./QueryWrapper";
+import CollectionGroupWrapper from "./CollectionGroupWrapper";
 
 class Path<FirestoreSchema extends GenericFirestoreSchema> {
   /**
@@ -31,22 +33,32 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
   }
 
   castToSchema<Path extends string>(
+    value: DocumentData,
+    optionalPath?: Path | undefined
+  ): SchemaAtPath<FirestoreSchema, Path, true>;
+  castToSchema<Path extends string>(
+    value: Query,
+    optionalPath?: Path | undefined
+  ): Query<SchemaAtPath<FirestoreSchema, Path, true>>;
+  castToSchema<Path extends string>(
     value: CollectionGroup,
     optionalPath?: Path | undefined
-  ): CollectionGroup<SchemaAtPath<FirestoreSchema, Path>>;
+  ): CollectionGroup<SchemaAtPath<FirestoreSchema, Path, true>>;
   castToSchema<Path extends string>(
     value: CollectionReference,
     optionalPath?: Path | undefined
-  ): CollectionReference<SchemaAtPath<FirestoreSchema, Path>>;
+  ): CollectionReference<SchemaAtPath<FirestoreSchema, Path, true>>;
   castToSchema<Path extends string>(
     value: DocumentSnapshot,
     optionalPath?: Path | undefined
-  ): DocumentSnapshot<SchemaAtPath<FirestoreSchema, Path>>;
+  ): DocumentSnapshot<SchemaAtPath<FirestoreSchema, Path, true>>;
   castToSchema<Path extends string>(
     value: DocumentReference,
     optionalPath?: Path | undefined
-  ): DocumentReference<SchemaAtPath<FirestoreSchema, Path>>;
+  ): DocumentReference<SchemaAtPath<FirestoreSchema, Path, true>>;
   castToSchema(value: unknown) {
+    // This function is purely to tell TypeScript the type of the passed-in
+    // value, but the value itself is not used. We can just return it as-is.
     return value;
   }
 
@@ -66,7 +78,7 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
    */
   collection<CollectionName extends StrKeyof<FirestoreSchema>>(
     collectionName: CollectionName
-  ): CollectionWrapper<FirestoreSchema[CollectionName]>;
+  ): CollectionWrapper<FirestoreSchema[CollectionName], never>;
   /**
    * Gets a `CollectionWrapper` instance that refers to the collection at the
    * specified path.
@@ -83,9 +95,9 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
    */
   collection<Path extends string>(
     collectionPath: Path
-  ): IndexByPath<FirestoreSchema, Path> extends infer R
+  ): IndexByPath<FirestoreSchema, Path, false> extends infer R
     ? R extends GenericFirestoreCollection
-      ? CollectionWrapper<R>
+      ? CollectionWrapper<R, never>
       : never
     : never;
   /**
@@ -106,16 +118,16 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
   collection<PathSegments extends string[]>(
     ...pathSegments: PathSegments
   ): string[] extends PathSegments
-    ? CollectionWrapper<GenericFirestoreCollection>
+    ? CollectionWrapper<GenericFirestoreCollection, never>
     : IsMalformedPath<PathSegments> extends true
     ? never
     : JoinPathSegments<PathSegments> extends infer R
     ? R extends string
-      ? IndexByPath<FirestoreSchema, R> extends infer Q
+      ? IndexByPath<FirestoreSchema, R, false> extends infer Q
         ? Q extends GenericFirestoreDocument
           ? never
           : Q extends GenericFirestoreCollection
-          ? CollectionWrapper<Q>
+          ? CollectionWrapper<Q, never>
           : never
         : never
       : never
@@ -124,8 +136,8 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
     collectionPath: string,
     ...additionalSegments: string[]
   ):
-    | CollectionWrapper<FirestoreSchema[string]>
-    | CollectionWrapper<GenericFirestoreCollection> {
+    | CollectionWrapper<FirestoreSchema[string], never>
+    | CollectionWrapper<GenericFirestoreCollection, never> {
     if (additionalSegments.length > 0) {
       let lastCollectionRef = this.firestore.collection(collectionPath);
       let lastDocRef: DocumentReference;
@@ -157,9 +169,9 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
    */
   doc<Path extends string>(
     docPath: Path
-  ): IndexByPath<FirestoreSchema, Path> extends infer R
+  ): IndexByPath<FirestoreSchema, Path, false> extends infer R
     ? R extends GenericFirestoreDocument
-      ? DocumentWrapper<R>
+      ? DocumentWrapper<R, never>
       : never
     : never;
   /**
@@ -179,14 +191,14 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
   doc<PathSegments extends string[]>(
     ...pathSegments: PathSegments
   ): string[] extends PathSegments
-    ? DocumentWrapper<GenericFirestoreDocument>
+    ? DocumentWrapper<GenericFirestoreDocument, never>
     : IsMalformedPath<PathSegments> extends true
     ? never
     : JoinPathSegments<PathSegments> extends infer R
     ? R extends string
-      ? IndexByPath<FirestoreSchema, R> extends infer Q
+      ? IndexByPath<FirestoreSchema, R, false> extends infer Q
         ? Q extends GenericFirestoreDocument
-          ? DocumentWrapper<Q>
+          ? DocumentWrapper<Q, never>
           : never
         : never
       : never
@@ -194,7 +206,7 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
   doc(
     docPath: string,
     ...additionalSegments: string[]
-  ): DocumentWrapper<GenericFirestoreDocument> {
+  ): DocumentWrapper<GenericFirestoreDocument, never> {
     if (additionalSegments.length > 0) {
       let lastCollectionRef = this.firestore.collection(docPath);
       let lastDocRef: DocumentReference;
@@ -229,13 +241,15 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
         infer R
       ]
     ? [R] extends [GenericFirestoreCollection]
-      ? QueryWrapper<Expand<R>>
+      ? CollectionGroupWrapper<Expand<R>, never>
       : never
     : never;
   collectionGroup(
     collectionId: string
-  ): QueryWrapper<GenericFirestoreCollection> {
-    return new QueryWrapper(this.firestore.collectionGroup(collectionId));
+  ): CollectionGroupWrapper<GenericFirestoreCollection, never> {
+    return new CollectionGroupWrapper(
+      this.firestore.collectionGroup(collectionId)
+    );
   }
 }
 

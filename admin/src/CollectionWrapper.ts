@@ -1,30 +1,91 @@
-import {
-  DOCUMENT_SCHEMA,
+import type {
+  DefaultIfNever,
+  DocumentsIn,
+  Expand,
   GenericFirestoreCollection,
   GenericFirestoreDocument,
+  SchemaOfCollection,
   SettableDocumentSchema,
   StrKeyof,
+  UnionOfTuplesToIntersection,
 } from "./types";
 import type {
   CollectionReference,
   DocumentData,
+  FirestoreDataConverter,
   WithFieldValue,
 } from "firebase-admin/firestore";
 import DocumentWrapper from "./DocumentWrapper";
 import QueryWrapper from "./QueryWrapper";
 
 class CollectionWrapper<
-  Collection extends GenericFirestoreCollection
-> extends QueryWrapper<Collection> {
+    Collection extends GenericFirestoreCollection,
+    ConvertedType
+  >
+  extends QueryWrapper<Collection, ConvertedType>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  implements CollectionReference<any>
+{
+  /** The raw Firebase `CollectionReference` instance. */
   public declare ref: CollectionReference<
-    {
-      [Key in StrKeyof<Collection>]: Collection[Key][DOCUMENT_SCHEMA];
-    }[StrKeyof<Collection>]
+    DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
   >;
 
-  constructor(ref: CollectionReference) {
+  constructor(ref: CollectionReference<ConvertedType | DocumentData>) {
     super(ref);
-    this.ref = ref;
+    this.ref = ref as CollectionReference<
+      DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
+    >;
+  }
+
+  /** The identifier of the collection. */
+  get id(): string {
+    return this.ref.id;
+  }
+
+  /**
+   * A reference to the containing `DocumentWrapper` if this is a subcollection,
+   * else null.
+   *
+   * The returned `DocumentWrapper` will be **untyped** since this
+   * `CollectionWrapper` only knows about its own children's schemas.
+   */
+  get parent(): DocumentWrapper<GenericFirestoreDocument, never> | null {
+    return this.ref.parent != null
+      ? new DocumentWrapper(this.ref.parent)
+      : null;
+  }
+
+  /**
+   * A string representing the path of the referenced collection (relative to
+   * the root of the database).
+   */
+  get path(): string {
+    return this.ref.path;
+  }
+
+  /**
+   * Retrieves the list of documents in this collection.
+   *
+   * The document references returned may include references to "missing
+   * documents", i.e. document locations that have no document present but
+   * which contain subcollections with documents. Attempting to read such a
+   * document reference (e.g. via `.get()` or `.onSnapshot()`) will return a
+   * `DocumentSnapshot` whose `.exists` property is false.
+   *
+   * @return The list of documents in this collection.
+   */
+  listDocuments(): Promise<
+    DocumentWrapper<DocumentsIn<Collection>, ConvertedType>[]
+  > {
+    return this.ref
+      .listDocuments()
+      .then((docs) =>
+        docs.map(
+          (doc) =>
+            new DocumentWrapper<DocumentsIn<Collection>, ConvertedType>(doc)
+        )
+      );
   }
 
   /**
@@ -32,11 +93,62 @@ class CollectionWrapper<
    * collection. An automatically-generated unique ID will be used as the
    * document ID.
    *
+   * The collection(s) referred to by this `CollectionWrapper` must have a
+   * document schema for all `string` keys since a random string ID will be
+   * generated. Otherwise, this function will return `never`.
+   *
+   * @example
+   * ```ts
+   * const documentWithNoSchema = new CollectionWrapper<{
+   *   documentName: {
+   *     [DOCUMENT_SCHEMA]: { ... }
+   *   },
+   *   anotherDocumentName: { ... }
+   * }>( ... ).doc();
+   * // Since the collection only has two documents (i.e., `"documentName"` and
+   * // `"anotherDocumentName"`), `doc()` can't create a new document with a random
+   * // ID, so it returns `never`.
+   *
+   * const documentWithValidSchema = new CollectionWrapper<{
+   *   [documentName: string]: {
+   *     [DOCUMENT_SCHEMA]: { ... }
+   *   }
+   * }>( ... ).doc();
+   * // This collection supports documents of any name (because of the
+   * // `[documentName: string]`), so `doc()` knows which schema to use, and it
+   * // succeeds.
+   * ```
+   *
    * @return The `DocumentWrapper` instance.
    */
-  doc(): string extends StrKeyof<Collection>
-    ? DocumentWrapper<Collection[string]>
-    : DocumentWrapper<GenericFirestoreDocument>;
+  // We have to tell prettier to ignore this section because it doesn't like
+  // comments in between lines of more complex types like this :(
+  // prettier-ignore
+  doc(): (
+    // For each collection in the `Collection` union...
+    Collection extends GenericFirestoreCollection
+      // ... make sure the Collection is indexable by `string` since this will
+      // create a document with a random string. There needs to be a
+      // corresponding document schema to assign the document to.
+      ? string extends StrKeyof<Collection>
+        // If it *is* indexable by `string`, return the DocumentWrapper for the
+        // schema of the documents in this collection.
+        ? DocumentWrapper<Collection[string], ConvertedType>
+        // If it is *not* indexable by string, return `false` as a sentinel
+        // value to indicate that not *all* collections are indexable by string.
+        : false
+      : never
+  // Store that union of `DocumentWrapper<Document> | false` as `R`
+  ) extends infer R
+    // If any of the collections were not indexable by `string` (which we test
+    // by checking if `false` is part of the union) ...
+    ? false extends R
+      // ... return `never` to prevent the developer from creating a document in
+      // a collection that does not have as associated document schema.
+      ? never
+      // Otherwise, return the union of `DocumentWrapper<Document>` objects.
+      : R
+    : never;
   /**
    * Gets a `DocumentWrapper` instance that refers to the document with the
    * specified name.
@@ -46,20 +158,60 @@ class CollectionWrapper<
    */
   doc<DocumentName extends StrKeyof<Collection>>(
     documentName: DocumentName
-  ): DocumentWrapper<Collection[DocumentName]>;
+  ): Collection extends GenericFirestoreCollection
+    ? // For each collection in `Collection`, make a `DocumentWrapper` around the
+      // document indexed by this key.
+      DocumentWrapper<Collection[DocumentName], ConvertedType>
+    : never;
   doc(
     documentName?: string
   ):
-    | DocumentWrapper<Collection[string]>
-    | DocumentWrapper<GenericFirestoreDocument> {
+    | DocumentWrapper<Collection[string], ConvertedType>
+    | DocumentWrapper<GenericFirestoreDocument, ConvertedType> {
     return typeof documentName === "string"
-      ? new DocumentWrapper(this.ref.doc(documentName))
-      : new DocumentWrapper(this.ref.doc());
+      ? new DocumentWrapper<Collection[string], ConvertedType>(
+          this.ref.doc(documentName)
+        )
+      : new DocumentWrapper<GenericFirestoreDocument, ConvertedType>(
+          this.ref.doc()
+        );
   }
 
   /**
    * Add a new document to this collection with the specified data, assigning it
    * a document ID automatically.
+   *
+   * The collection(s) referred to by this `CollectionWrapper` must have a
+   * document schema for all `string` keys since a random string ID will be
+   * generated. Otherwise, this function will return `never`.
+   *
+   * @example
+   * ```ts
+   * new CollectionWrapper<{
+   *   documentName: {
+   *     [DOCUMENT_SCHEMA]: { ... }
+   *   },
+   *   anotherDocumentName: { ... }
+   * }>( ... ).add( ... );
+   * // Since the collection only has two documents (i.e., `"documentName"` and
+   * // `"anotherDocumentName"`), `add()` can't create a new document with a random
+   * // ID, so `add()`'s parameter is `never`.
+   *
+   * const documentWithValidSchema = new CollectionWrapper<{
+   *   [documentName: string]: {
+   *     [DOCUMENT_SCHEMA]: {
+   *       someDocumentSchemaKey: unknown;
+   *       ...
+   *     }
+   *   }
+   * }>( ... ).add({
+   *   someDocumentSchemaKey: "some value"
+   *   ...
+   * });
+   * // This collection supports documents of any name (because of the
+   * // `[documentName: string]`), so `doc()` knows which schema to use, and it
+   * // succeeds.
+   * ```
    *
    * @param data An object containing the data for the new document.
    * @throws Error If the provided input is not a valid Firestore document.
@@ -67,21 +219,128 @@ class CollectionWrapper<
    *        created document after it has been written to the backend.
    */
   add(
-    // Since `add` is generating a random document ID, `data` can only be
-    // assigned a document schema if the current collection is indexable by
-    // `string` (i.e., all documents in the collection have the same schema).
-    // Otherwise, there's no associated schema for this collection and `data`
-    // has a `never` type to prevent it from being used improperly.
-    data: string extends StrKeyof<Collection>
-      ? WithFieldValue<SettableDocumentSchema<Collection[string]>>
+    // The types here are mostly copied over from `.doc()` (the overload with
+    // no arguments) since it does almost the same thing: it creates a document
+    // with a random string ID.
+    data: (
+      Collection extends GenericFirestoreCollection
+        ? string extends StrKeyof<Collection>
+          ? [
+              DefaultIfNever<
+                ConvertedType,
+                SettableDocumentSchema<Collection[string]>
+              >
+            ]
+          : false
+        : never
+    ) extends infer R
+      ? false extends R
+        ? never
+        : WithFieldValue<Expand<UnionOfTuplesToIntersection<R>>>
       : never
-  ): string extends StrKeyof<Collection>
-    ? Promise<DocumentWrapper<Collection[string]>>
+  ): (
+    Collection extends GenericFirestoreCollection
+      ? string extends StrKeyof<Collection>
+        ? DocumentWrapper<Collection[string], ConvertedType>
+        : false
+      : never
+  ) extends infer R
+    ? false extends R
+      ? never
+      : Promise<R>
     : never;
-  add(data: DocumentData): Promise<DocumentWrapper<Collection[string]>> {
+  add(
+    data: DefaultIfNever<ConvertedType, DocumentData>
+  ): Promise<DocumentWrapper<Collection[string], ConvertedType>> {
     // Wrap the returned `DocumentReference` in a `DocumentWrapper` after the
     // Promise returns.
-    return this.ref.add(data).then((ref) => new DocumentWrapper(ref));
+    return this.ref
+      .add(data)
+      .then(
+        (ref) => new DocumentWrapper<Collection[string], ConvertedType>(ref)
+      );
+  }
+
+  /**
+   * Returns true if this `CollectionWrapper` is equal to the provided one.
+   *
+   * @param other The `CollectionWrapper` to compare against.
+   * @return true if this `CollectionWrapper` is equal to the provided one.
+   */
+  isEqual(
+    other: CollectionWrapper<GenericFirestoreCollection, ConvertedType>
+  ): boolean;
+  /**
+   * Returns true if this `CollectionWrapper`'s `ref` is equal to the provided
+   * `CollectionReference`.
+   *
+   * @param other The `CollectionReference` to compare against.
+   * @return true if this `CollectionWrapper`'s `ref` is equal to the provided
+   *        `CollectionReference`.
+   */
+  isEqual(
+    other: CollectionReference<
+      DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
+    >
+  ): boolean;
+  isEqual(
+    other:
+      | CollectionWrapper<GenericFirestoreCollection, ConvertedType>
+      | CollectionReference<
+          DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
+        >
+  ): boolean;
+  isEqual(
+    other:
+      | CollectionWrapper<GenericFirestoreCollection, ConvertedType>
+      | CollectionReference<
+          DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
+        >
+  ): boolean {
+    return other instanceof CollectionWrapper
+      ? this.ref.isEqual(other.ref)
+      : this.ref.isEqual(other);
+  }
+
+  /**
+   * Applies a custom data converter to this `CollectionWrapper`, allowing you
+   * to use your own custom model objects with Firestore. When you call `get()`
+   * on the returned `CollectionWrapper`, the provided converter will convert
+   * between Firestore data and your custom type `U`.
+   *
+   * @param converter Converts objects to and from Firestore. Passing in `null`
+   *        removes the current converter.
+   * @return A `CollectionWrapper<U>` that uses the provided converter.
+   */
+  withConverter<U>(
+    converter: FirestoreDataConverter<U>
+  ): CollectionWrapper<Collection, U>;
+  /**
+   * Applies a custom data converter to this `CollectionWrapper`, allowing you
+   * to use your own custom model objects with Firestore. When you call `get()`
+   * on the returned `CollectionWrapper`, the provided converter will convert
+   * between Firestore data and your custom type `U`.
+   *
+   * @param converter Converts objects to and from Firestore. Passing in `null`
+   *        removes the current converter.
+   * @return A `CollectionWrapper<U>` that uses the provided converter.
+   */
+  withConverter(converter: null): CollectionWrapper<Collection, never>;
+  withConverter<U>(
+    converter: FirestoreDataConverter<U> | null
+  ): CollectionWrapper<Collection, never> | CollectionWrapper<Collection, U>;
+  withConverter<U>(
+    converter: FirestoreDataConverter<U> | null
+  ): CollectionWrapper<Collection, never> | CollectionWrapper<Collection, U> {
+    return new CollectionWrapper(
+      // Pretty stupid, but TypeScript forces us to choose one of the two
+      // overloads, so we have to determine the type of `converter` before
+      // passing it into `withConverter`, even though it's literally the same
+      // function call.
+      converter == null
+        ? this.ref.withConverter(converter)
+        : this.ref.withConverter(converter)
+    );
   }
 }
 

@@ -1,12 +1,29 @@
-import type { DOCUMENT_SCHEMA, GenericFirestoreDocument, GettableDocumentSchema, SettableDocumentSchema, StrKeyof } from "./types";
-import { DocumentReference, DocumentSnapshot, FieldPath, PartialWithFieldValue, Precondition, SetOptions, UpdateData, WithFieldValue, WriteResult } from "firebase-admin/firestore";
+import type { DefaultIfNever, GenericFirestoreCollection, GenericFirestoreDocument, GettableDocumentSchema, SchemaKeysOf, SchemaOfDocument, SettableDocumentSchema, StrKeyof, SubcollectionsIn } from "./types";
+import type { DocumentData, DocumentReference, DocumentSnapshot, FieldPath, Firestore, FirestoreDataConverter, PartialWithFieldValue, Precondition, SetOptions, UpdateData, WithFieldValue, WriteResult } from "firebase-admin/firestore";
 import CollectionWrapper from "./CollectionWrapper";
-declare class DocumentWrapper<Document extends GenericFirestoreDocument> {
+declare class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType> implements DocumentReference<any> {
     /**
      * The raw Firebase `DocumentReference` instance.
      */
-    ref: DocumentReference<Document[DOCUMENT_SCHEMA]>;
-    constructor(ref: DocumentReference);
+    ref: DocumentReference<DefaultIfNever<ConvertedType, SchemaOfDocument<Document>>>;
+    constructor(ref: DocumentReference<ConvertedType | DocumentData>);
+    /** The identifier of the document within its collection. */
+    get id(): string;
+    /**
+     * The `Firestore` for the Firestore database (useful for performing
+     * transactions, etc.).
+     */
+    get firestore(): Firestore;
+    /**
+     * A reference to the `CollectionWrapper` to which this `DocumentWrapper`
+     * belongs.
+     */
+    get parent(): CollectionWrapper<GenericFirestoreCollection, DefaultIfNever<ConvertedType, SchemaOfDocument<Document>>>;
+    /**
+     * A string representing the path of the referenced document (relative
+     * to the root of the database).
+     */
+    get path(): string;
     /**
      * Gets a `CollectionWrapper` instance that refers to the subcollection with
      * the specified name.
@@ -14,7 +31,13 @@ declare class DocumentWrapper<Document extends GenericFirestoreDocument> {
      * @param collectionName The name of a subcollection in the document.
      * @return The `CollectionWrapper` instance.
      */
-    collection<CollectionName extends StrKeyof<Document>>(collectionName: CollectionName): CollectionWrapper<Document[CollectionName]>;
+    collection<CollectionName extends StrKeyof<Document>>(collectionName: CollectionName): CollectionWrapper<Document[CollectionName], never>;
+    /**
+     * Fetches the subcollections that are direct children of this document.
+     *
+     * @returns A Promise that resolves with an array of `CollectionWrapper`s.
+     */
+    listCollections(): Promise<CollectionWrapper<SubcollectionsIn<Document>, never>[]>;
     /**
      * Creates a document referred to by this `DocumentWrapper` with the provided
      * object values. The write fails if the document already exists
@@ -23,7 +46,7 @@ declare class DocumentWrapper<Document extends GenericFirestoreDocument> {
      * @throws Error If the provided input is not a valid Firestore document.
      * @return A Promise resolved with the write time of this create.
      */
-    create(data: WithFieldValue<SettableDocumentSchema<Document>>): Promise<WriteResult>;
+    create(data: WithFieldValue<DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>>): Promise<WriteResult>;
     /**
      * Writes to the document referred to by this `DocumentWrapper`. If the
      * document does not yet exist, it will be created.
@@ -32,7 +55,7 @@ declare class DocumentWrapper<Document extends GenericFirestoreDocument> {
      * @throws Error If the provided input is not a valid Firestore document.
      * @return A Promise resolved with the write time of this set.
      */
-    set(data: WithFieldValue<SettableDocumentSchema<Document>>): Promise<WriteResult>;
+    set(data: WithFieldValue<DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>>): Promise<WriteResult>;
     /**
      * Writes to the document referred to by this `DocumentWrapper`. If the
      * document does not yet exist, it will be created. If you pass `options`, the
@@ -51,9 +74,9 @@ declare class DocumentWrapper<Document extends GenericFirestoreDocument> {
      * @throws Error If the provided input is not a valid Firestore document.
      * @return A Promise resolved with the write time of this set.
      */
-    set(data: PartialWithFieldValue<SettableDocumentSchema<Document>>, options: SetOptions): Promise<WriteResult>;
+    set(data: PartialWithFieldValue<DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>>, options: SetOptions): Promise<WriteResult>;
     /**
-     * Updates fields in the document referred to by this `DocumentWrapper`. The
+     * Updates fields in the DOcument referred to by this `DocumentWrapper`. The
      * update will fail if applied to a document that does not exist.
      *
      * Nested fields can be updated by providing dot-separated field path strings.
@@ -64,13 +87,13 @@ declare class DocumentWrapper<Document extends GenericFirestoreDocument> {
      * @throws Error If the provided input is not valid Firestore data.
      * @return A Promise resolved with the write time of this update.
      */
-    update(data: UpdateData<SettableDocumentSchema<Document>>, precondition?: Precondition): Promise<WriteResult>;
+    update(data: UpdateData<DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>>, precondition?: Precondition): Promise<WriteResult>;
     /**
-     * Updates fields in the document referred to by this `DocumentReference`.
-     * The update will fail if applied to a document that does not exist.
+     * Updates fields in the doCument referred to by this `DocumentWrapper`. The
+     * update will fail if applied to a document that does not exist.
      *
-     * Nested fields can be updated by providing dot-separated field path
-     * strings or by providing FieldPath objects.
+     * Nested fields can be updated by providing dot-separated field path strings
+     * or by providing FieldPath objects.
      *
      * A `Precondition` restricting this update can be specified as the last
      * argument.
@@ -78,12 +101,13 @@ declare class DocumentWrapper<Document extends GenericFirestoreDocument> {
      * @param field The first field to update.
      * @param value The first value.
      * @param moreFieldsOrPrecondition An alternating list of field paths and
-     * values to update, optionally followed by a `Precondition` to enforce on
-     * this update.
+     *        values to update, optionally followed by a `Precondition` to enforce
+     *        on this update.
      * @throws Error If the provided input is not valid Firestore data.
      * @return A Promise resolved with the write time of this update.
      */
-    update(field: string | FieldPath, value: unknown, ...moreFieldsOrPrecondition: unknown[]): Promise<WriteResult>;
+    update(field: SchemaKeysOf<Document> | FieldPath, value: unknown, ...moreFieldsOrPrecondition: unknown[]): Promise<WriteResult>;
+    update(dataOrField: UpdateData<DefaultIfNever<ConvertedType, DocumentData>> | string | FieldPath, preconditionOrValue?: Precondition | unknown, ...moreFieldsOrPrecondition: unknown[]): Promise<WriteResult>;
     /**
      * Deletes the document referred to by this `DocumentWrapper`.
      *
@@ -97,7 +121,7 @@ declare class DocumentWrapper<Document extends GenericFirestoreDocument> {
      * @return A Promise resolved with a `DocumentSnapshot` containing the
      *        current document contents.
      */
-    get(): Promise<DocumentSnapshot<GettableDocumentSchema<Document>>>;
+    get(): Promise<DocumentSnapshot<DefaultIfNever<ConvertedType, GettableDocumentSchema<Document>>>>;
     /**
      * Attaches a listener for DocumentSnapshot events.
      *
@@ -108,6 +132,46 @@ declare class DocumentWrapper<Document extends GenericFirestoreDocument> {
      * @return An unsubscribe function that can be called to cancel
      *        the snapshot listener.
      */
-    onSnapshot(onNext: (snapshot: DocumentSnapshot<GettableDocumentSchema<Document>>) => void, onError?: (error: Error) => void): () => void;
+    onSnapshot(onNext: (snapshot: DocumentSnapshot<DefaultIfNever<ConvertedType, GettableDocumentSchema<Document>>>) => void, onError?: (error: Error) => void): () => void;
+    /**
+     * Returns true if this `DocumentWrapper` is equal to the provided one.
+     *
+     * @param other The `DocumentWrapper` to compare against.
+     * @return true if this `DocumentWrapper` is equal to the provided one.
+     */
+    isEqual(other: DocumentWrapper<GenericFirestoreDocument, ConvertedType>): boolean;
+    /**
+     * Returns true if this `DocumentWrapper`'s `ref` is equal to the provided
+     * `DocumentReference`.
+     *
+     * @param other The `DocumentReference` to compare against.
+     * @return true if this `DocumentWrapper`'s `ref` is equal to the provided
+     *        `DocumentReference`.
+     */
+    isEqual(other: DocumentReference<DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>>): boolean;
+    isEqual(other: DocumentWrapper<GenericFirestoreDocument, ConvertedType> | DocumentReference<DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>>): boolean;
+    /**
+     * Applies a custom data converter to this `DocumentWrapper`, allowing you to
+     * use your own custom model objects with Firestore. When you call `get()` on
+     * the returned `DocumentWrapper`, the provided converter will convert between
+     * Firestore data and your custom type `U`.
+     *
+     * @param converter Converts objects to and from Firestore. Passing in `null`
+     *        removes the current converter.
+     * @return A `DocumentWrapper<U>` that uses the provided converter.
+     */
+    withConverter<U>(converter: FirestoreDataConverter<U>): DocumentWrapper<Document, U>;
+    /**
+     * Applies a custom data converter to this `DocumentWrapper`, allowing you to
+     * use your own custom model objects with Firestore. When you call `get()` on
+     * the returned `DocumentWrapper`, the provided converter will convert between
+     * Firestore data and your custom type `U`.
+     *
+     * @param converter Converts objects to and from Firestore. Passing in `null`
+     *        removes the current converter.
+     * @return A `DocumentWrapper<U>` that uses the provided converter.
+     */
+    withConverter(converter: null): DocumentWrapper<Document, never>;
+    withConverter<U>(converter: FirestoreDataConverter<U> | null): DocumentWrapper<Document, never> | DocumentWrapper<Document, U>;
 }
 export default DocumentWrapper;

@@ -4,6 +4,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+require("core-js/modules/esnext.async-iterator.map.js");
+require("core-js/modules/esnext.iterator.map.js");
 var _CollectionWrapper = _interopRequireDefault(require("./CollectionWrapper"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 class DocumentWrapper {
@@ -15,6 +17,39 @@ class DocumentWrapper {
     this.ref = ref;
   }
 
+  /** The identifier of the document within its collection. */
+  get id() {
+    return this.ref.id;
+  }
+
+  /**
+   * The `Firestore` for the Firestore database (useful for performing
+   * transactions, etc.).
+   */
+  get firestore() {
+    // This is wrapped in a getter instead of being assigned directly because
+    // the implementation of `Query.firestore` is also a getter, and thus not
+    // guaranteed to return the same value every time (even though I'm pretty
+    // sure it does, but to ensure consistency in future version...).
+    return this.ref.firestore;
+  }
+
+  /**
+   * A reference to the `CollectionWrapper` to which this `DocumentWrapper`
+   * belongs.
+   */
+  get parent() {
+    return new _CollectionWrapper.default(this.ref.parent);
+  }
+
+  /**
+   * A string representing the path of the referenced document (relative
+   * to the root of the database).
+   */
+  get path() {
+    return this.ref.path;
+  }
+
   /**
    * Gets a `CollectionWrapper` instance that refers to the subcollection with
    * the specified name.
@@ -24,6 +59,15 @@ class DocumentWrapper {
    */
   collection(collectionName) {
     return new _CollectionWrapper.default(this.ref.collection(collectionName));
+  }
+
+  /**
+   * Fetches the subcollections that are direct children of this document.
+   *
+   * @returns A Promise that resolves with an array of `CollectionWrapper`s.
+   */
+  listCollections() {
+    return this.ref.listCollections().then(collections => collections.map(collection => new _CollectionWrapper.default(collection)));
   }
 
   /**
@@ -56,7 +100,7 @@ class DocumentWrapper {
   }
 
   /**
-   * Updates fields in the document referred to by this `DocumentWrapper`. The
+   * Updates fields in the DOcument referred to by this `DocumentWrapper`. The
    * update will fail if applied to a document that does not exist.
    *
    * Nested fields can be updated by providing dot-separated field path strings.
@@ -71,8 +115,9 @@ class DocumentWrapper {
   update(dataOrField, preconditionOrValue, ...moreFieldsOrPrecondition) {
     // Firestore has two function overloads for `update()` that aren't
     // compatible with each other. Instead of trying to play with TypeScript to
-    // get it to work somehow, just choose the second function overload since
-    // the implementation of `update()` should be able to handle either one.
+    // get it to work somehow, we just choose the second function overload since
+    // the actual JavaScript implementation of `update()` should be able to
+    // handle either one anyway.
     return this.ref.update(dataOrField, preconditionOrValue, ...moreFieldsOrPrecondition);
   }
 
@@ -92,6 +137,7 @@ class DocumentWrapper {
    * @return A Promise resolved with a `DocumentSnapshot` containing the
    *        current document contents.
    */
+
   get() {
     return this.ref.get();
   }
@@ -108,6 +154,37 @@ class DocumentWrapper {
    */
   onSnapshot(onNext, onError) {
     return this.ref.onSnapshot(onNext, onError);
+  }
+
+  /**
+   * Returns true if this `DocumentWrapper` is equal to the provided one.
+   *
+   * @param other The `DocumentWrapper` to compare against.
+   * @return true if this `DocumentWrapper` is equal to the provided one.
+   */
+
+  isEqual(other) {
+    return other instanceof DocumentWrapper ? this.ref.isEqual(other.ref) : this.ref.isEqual(other);
+  }
+
+  /**
+   * Applies a custom data converter to this `DocumentWrapper`, allowing you to
+   * use your own custom model objects with Firestore. When you call `get()` on
+   * the returned `DocumentWrapper`, the provided converter will convert between
+   * Firestore data and your custom type `U`.
+   *
+   * @param converter Converts objects to and from Firestore. Passing in `null`
+   *        removes the current converter.
+   * @return A `DocumentWrapper<U>` that uses the provided converter.
+   */
+
+  withConverter(converter) {
+    return new DocumentWrapper(
+    // Pretty stupid, but TypeScript forces us to choose one of the two
+    // overloads, so we have to determine the type of `converter` before
+    // passing it into `withConverter`, even though it's literally the same
+    // function call.
+    converter == null ? this.ref.withConverter(converter) : this.ref.withConverter(converter));
   }
 }
 var _default = DocumentWrapper;

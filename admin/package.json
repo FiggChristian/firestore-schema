@@ -1,26 +1,7 @@
 {
   "name": "@firestore-schema/admin",
   "version": "1.0.0",
-  "description": "",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/types/index.d.ts",
-  "exports": {
-    "types": "./dist/types/index.d.ts",
-    "import": "./dist/esm/index.js",
-    "require": "./dist/cjs/index.js"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "babel:esm": "npx babel src --root-mode upward --env-name esm --extensions '.ts' --out-dir dist/esm",
-    "babel:cjs": "npx babel src --root-mode upward --env-name cjs --extensions '.ts' --out-dir dist/cjs",
-    "babel": "npm run babel:esm && npm run babel:cjs",
-    "build": "npm run babel && tsc"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/FiggChristian/firestore-schema.git"
-  },
+  "description": "Enforce schema types on your Firestore database.",
   "keywords": [
     "TypeScript",
     "Firestore",
@@ -30,12 +11,34 @@
     "types",
     "document"
   ],
-  "author": "Christian Figueroa <figgchristian@gmail.com>",
+  "homepage": "https://github.com/FiggChristian/firestore-schema/tree/main/admin#readme",
+  "bugs": "https://github.com/FiggChristian/firestore-schema/issues",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/FiggChristian/firestore-schema/issues"
+  "author": "Christian Figueroa <figgchristian@gmail.com>",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    "types": "./dist/types/index.d.ts",
+    "import": "./dist/esm/index.js",
+    "require": "./dist/cjs/index.js"
   },
-  "homepage": "https://github.com/FiggChristian/firestore-schema/admin#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FiggChristian/firestore-schema.git",
+    "directory": "admin"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "babel:esm": "npx babel src --root-mode upward --env-name esm --extensions '.ts' --out-dir dist/esm",
+    "babel:cjs": "npx babel src --root-mode upward --env-name cjs --extensions '.ts' --out-dir dist/cjs",
+    "babel": "npm run babel:esm && npm run babel:cjs",
+    "build": "npm run babel && tsc",
+    "prepack": "npm run build"
+  },
   "devDependencies": {
     "@babel/cli": "^7.21.0",
     "@babel/core": "^7.21.0",
@@ -45,11 +48,11 @@
     "@typescript-eslint/parser": "^5.54.0",
     "eslint": "^8.35.0",
     "eslint-config-prettier": "^8.6.0",
-    "firebase-admin": "^11.5.0",
-    "install": "^0.13.0",
-    "npm": "^9.6.0",
     "prettier": "^2.8.4",
     "typescript": "^4.9.5"
+  },
+  "peerDependencies": {
+    "firebase-admin": "^11.1"
   },
   "eslintConfig": {
     "env": {

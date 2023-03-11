@@ -4,14 +4,55 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-var _types = require("./types");
+/**
+ * A type that filters out documents from `Collection`, which can be a single
+ * `Collection` or a union of `Collection`s, that do not have have the specified
+ * key in their schema. This will maintain the original structure of the
+ * `Collection`(s) instead of combining their results into a single `Collection`
+ * object or union of many different `Collection`s.
+ */
+
+/**
+ * A type that filters out documents from `Collection`, which can be a single
+ * `Collection` or a union of `Collection`s, that do not have have the specified
+ * key in their schema, or where the associated value does not extend `Extends`.
+ * This will maintain the original structure of the `Collection`(s) instead of
+ * combining their results into a single `Collection` object or union of many
+ * different `Collection`s.
+ *
+ * This type does the same as `EnsureDocumentHasKey`, with the additional check
+ * that the value at the specified key extends `Extends`.
+ */
+
+/**
+ * A type that filters out documents from `Collection`, which can be a single
+ * `Collection` or a union of `Collection`s, that do not have have the specified
+ * key in their schema, or where `Extends` does not extend the associated value.
+ * This will maintain the original structure of the `Collection`(s) instead of
+ * combining their results into a single `Collection` object or union of many
+ * different `Collection`s.
+ *
+ * This type does the same as `EnsureDocumentHasKey`, with the additional check
+ * that `Extends` extends the value at the specified key.
+ */
+
 class QueryWrapper {
-  /**
-   * The raw Firebase `Query` instance.
-   */
+  /** The raw Firebase `Query` instance. */
   ref;
   constructor(ref) {
     this.ref = ref;
+  }
+
+  /**
+   * The `Firestore` for the Firestore database (useful for performing
+   * transactions, etc.).
+   */
+  get firestore() {
+    // This is wrapped in a getter instead of being assigned directly because
+    // the implementation of `Query.firestore` is also a getter, and thus not
+    // guaranteed to return the same value every time (even though I'm pretty
+    // sure it does, but to ensure consistency in future version...).
+    return this.ref.firestore;
   }
 
   /**
@@ -28,8 +69,12 @@ class QueryWrapper {
    * @return The created `QueryWrapper`.
    */
 
-  where(fieldPath, opStr, value) {
-    return new QueryWrapper(this.ref.where(fieldPath, opStr, value));
+  where(fieldPathOrFilter, opStr, value) {
+    if (opStr == null) {
+      return new QueryWrapper(this.ref.where(fieldPathOrFilter));
+    } else {
+      return new QueryWrapper(this.ref.where(fieldPathOrFilter, opStr, value));
+    }
   }
 
   /**
@@ -107,6 +152,10 @@ class QueryWrapper {
    * @param field The field paths to return.
    * @return The created `QueryWrapper`.
    */
+  // This overload is a special case where the user passes *no* fields at all,
+  // which means *no* fields will appear in the resulting documents. All
+  // documents' schemas have all their data stripped, leaving only an empty
+  // object.
 
   select(...field) {
     return new QueryWrapper(this.ref.select(...field));
@@ -121,8 +170,135 @@ class QueryWrapper {
    * @param snapshot The snapshot of the document to start after.
    * @return The created `QueryWrapper`.
    */
-  startAt(snapshot) {
-    return new QueryWrapper(this.ref.startAt(snapshot));
+
+  startAt(snapshotOrFieldValue, ...additionalFieldValues) {
+    return new QueryWrapper(this.ref.startAt(snapshotOrFieldValue, ...additionalFieldValues));
+  }
+
+  /**
+   * Creates and returns a new `QueryWrapper` that starts after the provided
+   * document (exclusive). The starting position is relative to the order of the
+   * query. The document must contain all of the fields provided in the orderBy
+   * of this query.
+   *
+   * @param snapshot The snapshot of the document to start after.
+   * @return The created `QueryWrapper`.
+   */
+
+  startAfter(snapshotOrFieldValue, ...additionalFieldValues) {
+    return new QueryWrapper(this.ref.startAfter(snapshotOrFieldValue, ...additionalFieldValues));
+  }
+
+  /**
+   * Creates and returns a new `QueryWrapper` that ends before the provided
+   * document (exclusive). The end position is relative to the order of the
+   * query. The document must contain all of the fields provided in the orderBy
+   * of this query.
+   *
+   * @param snapshot The snapshot of the document to end before.
+   * @return The created `QueryWrapper`.
+   */
+
+  endBefore(snapshotOrFieldValue, ...additionalFieldValues) {
+    return new QueryWrapper(this.ref.endBefore(snapshotOrFieldValue, ...additionalFieldValues));
+  }
+
+  /**
+   * Creates and returns a new `QueryWrapper` that ends at the provided document
+   * (inclusive). The end position is relative to the order of the query. The
+   * document must contain all of the fields provided in the orderBy of this
+   * query.
+   *
+   * @param snapshot The snapshot of the document to end at.
+   * @return The created `QueryWrapper`.
+   */
+
+  endAt(snapshotOrFieldValue, ...additionalFieldValues) {
+    return new QueryWrapper(this.ref.endAt(snapshotOrFieldValue, ...additionalFieldValues));
+  }
+
+  /**
+   * Executes the query and returns the results as a `QuerySnapshot`.
+   *
+   * @return A Promise that will be resolved with the results of the
+   *        `QueryWrapper`.
+   */
+  get() {
+    return this.ref.get();
+  }
+
+  /**
+   * Executes the query and returns the results as Node Stream.
+   *
+   * @returns A stream of `QueryDocumentSnapshot`.
+   */
+  stream() {
+    return this.ref.stream();
+  }
+
+  /**
+   * Attaches a listener for `QuerySnapshot `events.
+   *
+   * @param onNext A callback to be called every time a new `QuerySnapshot`
+   *        is available.
+   * @param onError A callback to be called if the listen fails or is
+   *        cancelled. No further callbacks will occur.
+   * @return An unsubscribe function that can be called to cancel
+   *        the snapshot listener.
+   */
+  onSnapshot(onNext, onError) {
+    return this.ref.onSnapshot(onNext, onError);
+  }
+
+  /**
+   * Returns a query that counts the documents in the result set of this query.
+   *
+   * The returned query, when executed, counts the documents in the result set
+   * of this query without actually downloading the documents.
+   *
+   * Using the returned query to count the documents is efficient because only
+   * the final count, not the documents' data, is downloaded. The returned query
+   * can even count the documents if the result set would be prohibitively large
+   * to download entirely (e.g. thousands of documents).
+   *
+   * @return A query that counts the documents in the result set of this query.
+   *        The count can be retrieved from `snapshot.data().count`, where
+   *        `snapshot` is the `AggregateQuerySnapshot` resulting from running
+   *        the returned query.
+   */
+  count() {
+    return this.ref.count();
+  }
+
+  /**
+   * Returns true if this `QueryWrapper` is equal to the provided one.
+   *
+   * @param other The `QueryWrapper` to compare against.
+   * @return true if this `QueryWrapper` is equal to the provided one.
+   */
+
+  isEqual(other) {
+    return this.ref.isEqual(other instanceof QueryWrapper ? other.ref : other);
+  }
+
+  /**
+   * Applies a custom data converter to this `QueryWrapper`, allowing you to use
+   * your own custom model objects with Firestore. When you call `get()` on the
+   * returned `QueryWrapper`, the provided converter will convert between
+   * Firestore data and your custom type `U`.
+   *
+   * @param converter Converts objects to and from Firestore. Passing in `null`
+   *        removes the current converter.
+   * @return A `QueryWrapper<U>` that uses the provided converter.
+   */
+
+  withConverter(converter) {
+    return new QueryWrapper(
+    // Pretty stupid, but TypeScript forces us to choose one of the two
+    // overloads, so we have to determine the type of `converter` before
+    // passing it into `withConverter`, even though it's literally the same
+    // function call.
+    converter == null ? this.ref.withConverter(converter) : this.ref.withConverter(converter));
   }
 }
 var _default = QueryWrapper;
