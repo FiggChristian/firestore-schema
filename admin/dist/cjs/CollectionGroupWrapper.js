@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 var _QueryWrapper = _interopRequireDefault(require("./QueryWrapper"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+/** A typed wrapper class around Firestore `CollectionGroup` objects. */
 class CollectionGroupWrapper extends _QueryWrapper.default {
   /** The raw Firebase `CollectionGroup` instance. */
 

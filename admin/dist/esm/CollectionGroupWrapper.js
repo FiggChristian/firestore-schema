@@ -1,4 +1,5 @@
 import QueryWrapper from "./QueryWrapper";
+/** A typed wrapper class around Firestore `CollectionGroup` objects. */
 class CollectionGroupWrapper extends QueryWrapper {
   /** The raw Firebase `CollectionGroup` instance. */
 

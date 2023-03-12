@@ -1,10 +1,10 @@
-import Path from "./Path";
-import DocumentWrapper from "./DocumentWrapper";
+import CollectionGroupWrapper from "./CollectionGroupWrapper";
 import CollectionWrapper from "./CollectionWrapper";
+import DocumentWrapper from "./DocumentWrapper";
+import Path from "./Path";
 import QueryWrapper from "./QueryWrapper";
-export var makePath = firestore => {
+var withSchema = firestore => {
   return new Path(firestore);
 };
-export var path = makePath;
-export { CollectionWrapper, DocumentWrapper, Path, QueryWrapper };
-export default makePath;
+export { CollectionGroupWrapper, CollectionWrapper, DocumentWrapper, Path, QueryWrapper, withSchema };
+export default withSchema;

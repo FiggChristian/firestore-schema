@@ -141,6 +141,7 @@ type EnsureValueExtendsDocumentKey<
     : never
   : never;
 
+/** A typed wrapper class around Firestore `Query` objects. */
 class QueryWrapper<Collection extends GenericFirestoreCollection, ConvertedType>
   implements
     Query<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>
@@ -168,6 +169,15 @@ class QueryWrapper<Collection extends GenericFirestoreCollection, ConvertedType>
     return this.ref.firestore;
   }
 
+  // #region where overloads
+  // This section includes a bunch of overloads for the `where` method. Each
+  // operator type (e.g., `==`, `in`, etc.) contains different return types so
+  // that the document types are filtered as best as possible by TypeScript. For
+  // example, using the `array-contains` operator filters out to include only
+  // documents whose corresponding key points to an array that could contain the
+  // filtered type. This makes it more type-safe when using `collectionGroup`
+  // because it forces you to filter documents you may not have considered were
+  // matched, but that were caught by TypeScript.
   /**
    * Creates and returns a new `QueryWrapper` with the additional filter that
    * documents must contain the specified field and that its value should
@@ -510,6 +520,7 @@ class QueryWrapper<Collection extends GenericFirestoreCollection, ConvertedType>
       );
     }
   }
+  // #endregion
 
   /**
    * Creates and returns a new `QueryWrapper` that's additionally sorted by the
@@ -520,7 +531,7 @@ class QueryWrapper<Collection extends GenericFirestoreCollection, ConvertedType>
    *
    * @param fieldPath The field to sort by.
    * @param directionStr Optional direction to sort by ('asc' or 'desc'). If not
-   * specified, order will be ascending.
+   *        specified, order will be ascending.
    * @return The created `QueryWrapper`.
    */
   orderBy(
@@ -711,13 +722,13 @@ class QueryWrapper<Collection extends GenericFirestoreCollection, ConvertedType>
    */
   startAt(snapshot: DocumentSnapshot): QueryWrapper<Collection, ConvertedType>;
   /**
-   * Creates and returns a new Query that starts at the provided fields
-   * relative to the order of the query. The order of the field values
-   * must match the order of the order by clauses of the query.
+   * Creates and returns a new `QueryWrapper` that starts at the provided fields
+   * relative to the order of the query. The order of the field values must
+   * match the order of the order by clauses of the query.
    *
-   * @param fieldValues The field values to start this query at, in order
-   *        of the query's order by.
-   * @return The created Query.
+   * @param fieldValues The field values to start this query at, in order of the
+   *        query's order by.
+   * @return The created `QueryWrapper`.
    */
   startAt(...fieldValues: unknown[]): QueryWrapper<Collection, ConvertedType>;
   startAt(
@@ -805,13 +816,13 @@ class QueryWrapper<Collection extends GenericFirestoreCollection, ConvertedType>
   endAt(snapshot: DocumentSnapshot): QueryWrapper<Collection, ConvertedType>;
 
   /**
-   * Creates and returns a new Query that ends at the provided fields
-   * relative to the order of the query. The order of the field values
-   * must match the order of the order by clauses of the query.
+   * Creates and returns a new `QueryWrapper` that ends at the provided fields
+   * relative to the order of the query. The order of the field values must
+   * match the order of the order by clauses of the query.
    *
-   * @param fieldValues The field values to end this query at, in order
-   * of the query's order by.
-   * @return The created Query.
+   * @param fieldValues The field values to end this query at, in order of the
+   *        query's order by.
+   * @return The created `QueryWrapper`.
    */
   endAt(...fieldValues: unknown[]): QueryWrapper<Collection, ConvertedType>;
   endAt(

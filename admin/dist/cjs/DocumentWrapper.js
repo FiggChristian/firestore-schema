@@ -8,10 +8,9 @@ require("core-js/modules/esnext.async-iterator.map.js");
 require("core-js/modules/esnext.iterator.map.js");
 var _CollectionWrapper = _interopRequireDefault(require("./CollectionWrapper"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+/** A typed wrapper class around Firestore `DocumentReference` objects. */
 class DocumentWrapper {
-  /**
-   * The raw Firebase `DocumentReference` instance.
-   */
+  /** The raw Firebase `DocumentReference` instance. */
   ref;
   constructor(ref) {
     this.ref = ref;
@@ -37,6 +36,9 @@ class DocumentWrapper {
   /**
    * A reference to the `CollectionWrapper` to which this `DocumentWrapper`
    * belongs.
+   *
+   * The returned `CollectionWrapper` will be **untyped** since this
+   * `DocumentWrapper` only knows about its own children's schemas.
    */
   get parent() {
     return new _CollectionWrapper.default(this.ref.parent);

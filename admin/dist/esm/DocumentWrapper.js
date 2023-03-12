@@ -7,10 +7,10 @@ function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key i
 function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typeof key === "symbol" ? key : String(key); }
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 import CollectionWrapper from "./CollectionWrapper";
+
+/** A typed wrapper class around Firestore `DocumentReference` objects. */
 class DocumentWrapper {
-  /**
-   * The raw Firebase `DocumentReference` instance.
-   */
+  /** The raw Firebase `DocumentReference` instance. */
 
   constructor(ref) {
     _defineProperty(this, "ref", void 0);
@@ -37,6 +37,9 @@ class DocumentWrapper {
   /**
    * A reference to the `CollectionWrapper` to which this `DocumentWrapper`
    * belongs.
+   *
+   * The returned `CollectionWrapper` will be **untyped** since this
+   * `DocumentWrapper` only knows about its own children's schemas.
    */
   get parent() {
     return new CollectionWrapper(this.ref.parent);

@@ -1,10 +1,10 @@
 import type { Firestore } from "firebase-admin/firestore";
 import type { DOCUMENT_SCHEMA, GenericFirestoreSchema, GenericFirestoreCollection, GenericFirestoreDocument } from "./types";
-import Path from "./Path";
-import DocumentWrapper from "./DocumentWrapper";
+import CollectionGroupWrapper from "./CollectionGroupWrapper";
 import CollectionWrapper from "./CollectionWrapper";
+import DocumentWrapper from "./DocumentWrapper";
+import Path from "./Path";
 import QueryWrapper from "./QueryWrapper";
-export declare const makePath: <FirestoreSchema extends GenericFirestoreSchema>(firestore: Firestore) => Path<FirestoreSchema>;
-export declare const path: <FirestoreSchema extends GenericFirestoreSchema>(firestore: Firestore) => Path<FirestoreSchema>;
-export { CollectionWrapper, DOCUMENT_SCHEMA, DocumentWrapper, GenericFirestoreSchema, GenericFirestoreCollection, GenericFirestoreDocument, Path, QueryWrapper, };
-export default makePath;
+declare const withSchema: <FirestoreSchema extends GenericFirestoreSchema>(firestore: Firestore) => Path<FirestoreSchema>;
+export { CollectionGroupWrapper, CollectionWrapper, DOCUMENT_SCHEMA, DocumentWrapper, GenericFirestoreSchema, GenericFirestoreCollection, GenericFirestoreDocument, Path, QueryWrapper, withSchema, };
+export default withSchema;

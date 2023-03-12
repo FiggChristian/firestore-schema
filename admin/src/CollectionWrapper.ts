@@ -18,11 +18,19 @@ import type {
 import DocumentWrapper from "./DocumentWrapper";
 import QueryWrapper from "./QueryWrapper";
 
+/** A typed wrapper class around Firestore `CollectionReference` objects. */
 class CollectionWrapper<
     Collection extends GenericFirestoreCollection,
     ConvertedType
   >
   extends QueryWrapper<Collection, ConvertedType>
+  // The `CollectionReference` class exported by Firebase has a private
+  // constructor, which makes it hard to subclass it since we can't create our
+  // own instances of it. Instead, we just `implement` the class so TypeScript
+  // makes sure we implement all the proper methods without actually extending
+  // it. Some of the methods are not directly assignable to
+  // `CollectionReference<ConvertedType>` though because the types are not
+  // directly assignable to each other, so I had to use `any`.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   implements CollectionReference<any>
 {

@@ -9,7 +9,15 @@ require("core-js/modules/esnext.iterator.map.js");
 var _DocumentWrapper = _interopRequireDefault(require("./DocumentWrapper"));
 var _QueryWrapper = _interopRequireDefault(require("./QueryWrapper"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+/** A typed wrapper class around Firestore `CollectionReference` objects. */
 class CollectionWrapper extends _QueryWrapper.default
+// The `CollectionReference` class exported by Firebase has a private
+// constructor, which makes it hard to subclass it since we can't create our
+// own instances of it. Instead, we just `implement` the class so TypeScript
+// makes sure we implement all the proper methods without actually extending
+// it. Some of the methods are not directly assignable to
+// `CollectionReference<ConvertedType>` though because the types are not
+// directly assignable to each other, so I had to use `any`.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 {
   /** The raw Firebase `CollectionReference` instance. */

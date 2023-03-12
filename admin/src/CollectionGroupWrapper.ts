@@ -11,6 +11,7 @@ import type {
   QueryPartition,
 } from "firebase-admin/firestore";
 
+/** A typed wrapper class around Firestore `CollectionGroup` objects. */
 class CollectionGroupWrapper<
     Collection extends GenericFirestoreCollection,
     ConvertedType = never
@@ -77,6 +78,11 @@ class CollectionGroupWrapper<
    * @return A `QueryWrapper<U>` that uses the provided converter.
    */
   withConverter(converter: null): CollectionGroupWrapper<Collection, never>;
+  withConverter<U>(
+    converter: FirestoreDataConverter<U> | null
+  ):
+    | CollectionGroupWrapper<Collection, never>
+    | CollectionGroupWrapper<Collection, U>;
   withConverter<U>(
     converter: FirestoreDataConverter<U> | null
   ):

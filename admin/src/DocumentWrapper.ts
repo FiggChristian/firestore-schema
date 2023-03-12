@@ -25,13 +25,19 @@ import type {
 } from "firebase-admin/firestore";
 import CollectionWrapper from "./CollectionWrapper";
 
+/** A typed wrapper class around Firestore `DocumentReference` objects. */
 class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
+  // The `DocumentReference` class exported by Firebase has a private
+  // constructor, which makes it hard to subclass it since we can't create our
+  // own instances of it. Instead, we just `implement` the class so TypeScript
+  // makes sure we implement all the proper methods without actually extending
+  // it. Some of the methods are not directly assignable to
+  // `DocumentReference<ConvertedType>` though because the types are not
+  // directly assignable to each other, so I had to use `any`.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   implements DocumentReference<any>
 {
-  /**
-   * The raw Firebase `DocumentReference` instance.
-   */
+  /** The raw Firebase `DocumentReference` instance. */
   public ref: DocumentReference<
     DefaultIfNever<ConvertedType, SchemaOfDocument<Document>>
   >;
@@ -62,6 +68,9 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
   /**
    * A reference to the `CollectionWrapper` to which this `DocumentWrapper`
    * belongs.
+   *
+   * The returned `CollectionWrapper` will be **untyped** since this
+   * `DocumentWrapper` only knows about its own children's schemas.
    */
   get parent(): CollectionWrapper<
     GenericFirestoreCollection,

@@ -10,6 +10,8 @@ import type {
  * A Symbol used for accessing the schema of documents in the database. Each
  * document is an object that can hold nested collections as keys, so the
  * document's schema must be accessed via this special Symbol.
+ *
+ * This value can also be accessed via `Symbol.for("DOCUMENT_SCHEMA")`.
  */
 export const DOCUMENT_SCHEMA = Symbol.for("DOCUMENT_SCHEMA");
 /**
@@ -133,16 +135,14 @@ export type NestedCollectionIndexByPath<
 export type IndexAllDocumentsInCollection<
   Collection extends GenericFirestoreCollection,
   Rest extends string
-> = Collection extends {
-  [_ in infer DocumentNames]: GenericFirestoreDocument;
-}
+> = Collection extends GenericFirestoreCollection
   ? {
-      [DocumentName in DocumentNames]: NestedDocumentIndexByPath<
+      [DocumentName in StrKeyof<Collection>]: NestedDocumentIndexByPath<
         Collection[DocumentName],
         Rest,
         true
       >;
-    }[DocumentNames]
+    }[StrKeyof<Collection>]
   : never;
 
 /**
@@ -150,8 +150,7 @@ export type IndexAllDocumentsInCollection<
  * returns the collection or document at the specified path, or `never` if the
  * path does not exist in the database schema.
  *
- * This can be combined with `SchemaFromObject` to return the schema at a
- * specific path in the database.
+ * Pass `true`/`false` for `AllowWildcard` to enable/disable `{wildcard}` paths.
  *
  * @example
  * ```ts
@@ -197,6 +196,11 @@ export type IndexByPath<
   ? FirestoreSchema[Path]
   : never;
 
+/**
+ * Returns the schema of the document or collection at the specified path.
+ *
+ * Pass `true`/`false` for `AllowWildcard` to enable/disable `{wildcard}` paths.
+ */
 export type SchemaAtPath<
   FirestoreSchema extends GenericFirestoreSchema,
   Path extends string,
@@ -207,11 +211,9 @@ export type SchemaAtPath<
   AllowWildcard
 > extends infer IndexedObject
   ? IndexedObject extends GenericFirestoreDocument
-    ? IndexedObject[typeof DOCUMENT_SCHEMA]
+    ? SchemaOfDocument<IndexedObject>
     : IndexedObject extends GenericFirestoreCollection
-    ? {
-        [DocumentName in StrKeyof<IndexedObject>]: IndexedObject[DocumentName][DOCUMENT_SCHEMA];
-      }[StrKeyof<IndexedObject>]
+    ? SchemaOfCollection<IndexedObject>
     : never
   : never;
 
@@ -247,6 +249,7 @@ type NestedIndexByCollectionGroupID<
         >;
       }[StrKeyof<Document[NestedCollectionName]>];
 }[DocumentKeys];
+
 /**
  * A type used for indexing into the database with a nested collection group ID.
  * It returns a union of all the collections in the database that have the
@@ -269,48 +272,19 @@ export type IndexByCollectionGroupID<
   CollectionName extends string
 > = NestedIndexByCollectionGroupID<CollectionName, FirestoreSchema>;
 
-export type ConvertSchemaType<
-  FirestoreSchema extends GenericFirestoreSchema,
-  From,
-  To
-> = {
-  [CollectionName in keyof FirestoreSchema]: ConvertCollectionType<
-    FirestoreSchema[CollectionName],
-    From,
-    To
-  >;
-};
-export type ConvertCollectionType<
-  Collection extends GenericFirestoreCollection,
-  From,
-  To
-> = {
-  [DocumentName in keyof Collection]: ConvertDocumentType<
-    Collection[DocumentName],
-    From,
-    To
-  >;
-};
-export type ConvertDocumentType<
-  Document extends GenericFirestoreDocument,
-  From,
-  To
-> = {
-  [CollectionName in keyof Document]: CollectionName extends DOCUMENT_SCHEMA
-    ? ConvertDocumentSchemaType<Document[DOCUMENT_SCHEMA], From, To>
-    : ConvertCollectionType<Document[CollectionName], From, To>;
-};
 export type ConvertDocumentSchemaType<
   DocumentSchema extends DocumentData,
   From,
   To
-> = {
-  [Key in keyof DocumentSchema]: ConvertDocumentSchemaValueType<
-    DocumentSchema[Key],
-    From,
-    To
-  >;
-};
+> = DocumentSchema extends DocumentData
+  ? {
+      [Key in keyof DocumentSchema]: ConvertDocumentSchemaValueType<
+        DocumentSchema[Key],
+        From,
+        To
+      >;
+    }
+  : never;
 export type ConvertDocumentSchemaValueType<Value, From, To> =
   Value extends (infer T)[]
     ? ConvertDocumentSchemaValueType<T, From, To>[]
@@ -429,18 +403,24 @@ export type GettableFirestoreDataTypeNoArray =
   | { [key: string]: GettableFirestoreDataType };
 
 /**
- * The value types that be returned from Firestore in a document's fields.
+ * The value types that can be returned from Firestore in a document's fields.
  */
 export type GettableFirestoreDataType =
   ValueOrArray<GettableFirestoreDataTypeNoArray>;
 
 /**
- * The value types that be uploaded to Firestore in a document's fields.
+ * The value types that can be uploaded to Firestore in a document's fields.
  */
 export type SettableFirestoreDataType = ValueOrArray<
   GettableFirestoreDataTypeNoArray | Date | Uint8Array | FieldValue
 >;
 
+/**
+ * Returns a "gettable" version of a document's schema. All values in the schema
+ * are replaced with their "gettable" version (i.e., the value that would be
+ * returned from Firestore after `get`ting the document). The most important one
+ * of these substitutions is turning `Date` objects into Firebase `Timestamp`s.
+ */
 export type GettableDocumentSchema<Document extends GenericFirestoreDocument> =
   Expand<
     ConvertDocumentSchemaType<
@@ -449,6 +429,14 @@ export type GettableDocumentSchema<Document extends GenericFirestoreDocument> =
       Buffer
     >
   >;
+/**
+ * Returns a "settable" version of a document's schema. All values in the schema
+ * are replaced with their "settable" version (i.e., the value that can be used
+ * to `set` or `update` the document). The most important one of these
+ * substitutions is turning Firestore `Timestamp` objects into `Date`s since
+ * those are easier to work with and upload (or direct Firestore `Timestamp`
+ * objects too since those are also valid).
+ */
 export type SettableDocumentSchema<Document extends GenericFirestoreDocument> =
   Expand<
     ConvertDocumentSchemaType<
@@ -462,14 +450,29 @@ export type SettableDocumentSchema<Document extends GenericFirestoreDocument> =
     >
   >;
 
+/**
+ * Returns all the documents in a collection. If `Collection` is a union of
+ * multiple collections, the returned type will be a union of all the
+ * collections' documents.
+ */
 export type DocumentsIn<Collection extends GenericFirestoreCollection> =
   Collection extends GenericFirestoreCollection ? Collection[string] : never;
 
+/**
+ * Returns all the subcollections in a document. If `Document` is a union of
+ * multiple documents, the returned type will be a union of all the documents'
+ * subcollections.
+ */
 export type SubcollectionsIn<Document extends GenericFirestoreDocument> =
   Document extends GenericFirestoreDocument
     ? Document[StrKeyof<Document>]
     : never;
 
+/**
+ * Returns the keys in a document's schema. If `Document` is a union of multiple
+ * documents, the returned type will be a union of all the documents' schemas'
+ * keys.
+ */
 export type SchemaKeysOf<Document extends GenericFirestoreDocument> =
   Document extends GenericFirestoreDocument
     ? SchemaOfDocument<Document> extends infer R
@@ -481,9 +484,18 @@ export type SchemaKeysOf<Document extends GenericFirestoreDocument> =
       : never
     : never;
 
+/**
+ * Returns the schema of a document. If `Document` is a union of multiple
+ * documents, the returned type will be a union of all the documents' schemas.
+ */
 export type SchemaOfDocument<Document extends GenericFirestoreDocument> =
   Document[DOCUMENT_SCHEMA];
 
+/**
+ * Returns the schema of a collection's documents. If `Collection` is a union of
+ * multiple collections, the returned type will be a union of all the
+ * collections' documents' schemas.
+ */
 export type SchemaOfCollection<Collection extends GenericFirestoreCollection> =
   SchemaOfDocument<DocumentsIn<Collection>>;
 
@@ -505,14 +517,15 @@ export type SchemaOfCollection<Collection extends GenericFirestoreCollection> =
  * // { foo: 1 | 2, bar: 3 }
  * ```
  *
- * This is distinct from `UnionToIntersection` in that it lets you maintain
- * "inner" intersections by wrapping them in `[]` so that they don't also become
- * intersected.
+ * This is distinct from a normal `UnionToIntersection` in that it lets you
+ * maintain "inner" intersections by wrapping them in `[]` so that they don't
+ * also become intersected.
  */
 export type UnionOfTuplesToIntersection<U> = (
-  U extends [infer T] ? (k: T) => void : (k: U) => void
+  U extends [infer T] ? (k: T) => void : never
 ) extends (k: infer I) => void
   ? I
   : never;
 
+/** If `T` is `never`, returns `Default`. Otherwise, returns `T`. */
 export type DefaultIfNever<T, Default> = [T] extends [never] ? Default : T;

@@ -1,10 +1,9 @@
 import type { DefaultIfNever, GenericFirestoreCollection, GenericFirestoreDocument, GettableDocumentSchema, SchemaKeysOf, SchemaOfDocument, SettableDocumentSchema, StrKeyof, SubcollectionsIn } from "./types";
 import type { DocumentData, DocumentReference, DocumentSnapshot, FieldPath, Firestore, FirestoreDataConverter, PartialWithFieldValue, Precondition, SetOptions, UpdateData, WithFieldValue, WriteResult } from "firebase-admin/firestore";
 import CollectionWrapper from "./CollectionWrapper";
+/** A typed wrapper class around Firestore `DocumentReference` objects. */
 declare class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType> implements DocumentReference<any> {
-    /**
-     * The raw Firebase `DocumentReference` instance.
-     */
+    /** The raw Firebase `DocumentReference` instance. */
     ref: DocumentReference<DefaultIfNever<ConvertedType, SchemaOfDocument<Document>>>;
     constructor(ref: DocumentReference<ConvertedType | DocumentData>);
     /** The identifier of the document within its collection. */
@@ -17,6 +16,9 @@ declare class DocumentWrapper<Document extends GenericFirestoreDocument, Convert
     /**
      * A reference to the `CollectionWrapper` to which this `DocumentWrapper`
      * belongs.
+     *
+     * The returned `CollectionWrapper` will be **untyped** since this
+     * `DocumentWrapper` only knows about its own children's schemas.
      */
     get parent(): CollectionWrapper<GenericFirestoreCollection, DefaultIfNever<ConvertedType, SchemaOfDocument<Document>>>;
     /**

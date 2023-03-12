@@ -36,6 +36,7 @@ function _toPrimitive(input, hint) { if (typeof input !== "object" || input === 
  * that `Extends` extends the value at the specified key.
  */
 
+/** A typed wrapper class around Firestore `Query` objects. */
 class QueryWrapper {
   /** The raw Firebase `Query` instance. */
 
@@ -56,6 +57,15 @@ class QueryWrapper {
     return this.ref.firestore;
   }
 
+  // #region where overloads
+  // This section includes a bunch of overloads for the `where` method. Each
+  // operator type (e.g., `==`, `in`, etc.) contains different return types so
+  // that the document types are filtered as best as possible by TypeScript. For
+  // example, using the `array-contains` operator filters out to include only
+  // documents whose corresponding key points to an array that could contain the
+  // filtered type. This makes it more type-safe when using `collectionGroup`
+  // because it forces you to filter documents you may not have considered were
+  // matched, but that were caught by TypeScript.
   /**
    * Creates and returns a new `QueryWrapper` with the additional filter that
    * documents must contain the specified field and that its value should
@@ -77,6 +87,7 @@ class QueryWrapper {
       return new QueryWrapper(this.ref.where(fieldPathOrFilter, opStr, value));
     }
   }
+  // #endregion
 
   /**
    * Creates and returns a new `QueryWrapper` that's additionally sorted by the
@@ -87,7 +98,7 @@ class QueryWrapper {
    *
    * @param fieldPath The field to sort by.
    * @param directionStr Optional direction to sort by ('asc' or 'desc'). If not
-   * specified, order will be ascending.
+   *        specified, order will be ascending.
    * @return The created `QueryWrapper`.
    */
   orderBy(fieldPath, directionStr) {

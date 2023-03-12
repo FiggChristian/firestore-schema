@@ -1,6 +1,7 @@
 import QueryWrapper from "./QueryWrapper";
 import type { DefaultIfNever, GenericFirestoreCollection, SchemaOfCollection } from "./types";
 import type { CollectionGroup, DocumentData, FirestoreDataConverter, QueryPartition } from "firebase-admin/firestore";
+/** A typed wrapper class around Firestore `CollectionGroup` objects. */
 declare class CollectionGroupWrapper<Collection extends GenericFirestoreCollection, ConvertedType = never> extends QueryWrapper<Collection, ConvertedType> implements CollectionGroup<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>> {
     /** The raw Firebase `CollectionGroup` instance. */
     ref: CollectionGroup<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>;
@@ -38,5 +39,6 @@ declare class CollectionGroupWrapper<Collection extends GenericFirestoreCollecti
      * @return A `QueryWrapper<U>` that uses the provided converter.
      */
     withConverter(converter: null): CollectionGroupWrapper<Collection, never>;
+    withConverter<U>(converter: FirestoreDataConverter<U> | null): CollectionGroupWrapper<Collection, never> | CollectionGroupWrapper<Collection, U>;
 }
 export default CollectionGroupWrapper;

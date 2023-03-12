@@ -3,6 +3,12 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+Object.defineProperty(exports, "CollectionGroupWrapper", {
+  enumerable: true,
+  get: function () {
+    return _CollectionGroupWrapper.default;
+  }
+});
 Object.defineProperty(exports, "CollectionWrapper", {
   enumerable: true,
   get: function () {
@@ -27,17 +33,16 @@ Object.defineProperty(exports, "QueryWrapper", {
     return _QueryWrapper.default;
   }
 });
-exports.path = exports.makePath = exports.default = void 0;
-var _Path = _interopRequireDefault(require("./Path"));
-var _DocumentWrapper = _interopRequireDefault(require("./DocumentWrapper"));
+exports.withSchema = exports.default = void 0;
+var _CollectionGroupWrapper = _interopRequireDefault(require("./CollectionGroupWrapper"));
 var _CollectionWrapper = _interopRequireDefault(require("./CollectionWrapper"));
+var _DocumentWrapper = _interopRequireDefault(require("./DocumentWrapper"));
+var _Path = _interopRequireDefault(require("./Path"));
 var _QueryWrapper = _interopRequireDefault(require("./QueryWrapper"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-const makePath = firestore => {
+const withSchema = firestore => {
   return new _Path.default(firestore);
 };
-exports.makePath = makePath;
-const path = makePath;
-exports.path = path;
-var _default = makePath;
+exports.withSchema = withSchema;
+var _default = withSchema;
 exports.default = _default;

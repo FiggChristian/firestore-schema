@@ -2,6 +2,7 @@ import type { DefaultIfNever, DocumentsIn, Expand, GenericFirestoreCollection, G
 import type { CollectionReference, DocumentData, FirestoreDataConverter, WithFieldValue } from "firebase-admin/firestore";
 import DocumentWrapper from "./DocumentWrapper";
 import QueryWrapper from "./QueryWrapper";
+/** A typed wrapper class around Firestore `CollectionReference` objects. */
 declare class CollectionWrapper<Collection extends GenericFirestoreCollection, ConvertedType> extends QueryWrapper<Collection, ConvertedType> implements CollectionReference<any> {
     /** The raw Firebase `CollectionReference` instance. */
     ref: CollectionReference<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>;

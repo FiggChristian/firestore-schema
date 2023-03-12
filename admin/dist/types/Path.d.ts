@@ -9,11 +9,446 @@ declare class Path<FirestoreSchema extends GenericFirestoreSchema> {
      */
     firestore: FirebaseFirestore.Firestore;
     constructor(firestore: FirebaseFirestore.Firestore);
+    /**
+     * Casts an object to the specified schema as determined by the path to the
+     * document/collection.
+     *
+     * You can pass the path to the document/collection as a TypeScript generic
+     * value (i.e., `castToSchema<"path/to/document">(value)`) or as a JavaScript
+     * string value (i.e., `castToSchema(value, "path/to/collection")`).
+     *
+     * You can specify "wildcard" values by surrounding one of the path segments
+     * in `{` braces `}`. This will match the schema of *all*
+     * documents/collections at that path segment.
+     *
+     * @example
+     * ```ts
+     * type Schema = {
+     *   users: {
+     *     [uid: string]: {
+     *       [DOCUMENT_SCHEMA]: UserDataType;
+     *     }
+     *   },
+     *   posts: {
+     *     specificPostID: {
+     *       [DOCUMENT_SCHEMA]: SomePostDataType;
+     *     }
+     *   }
+     * }
+     * const path = withSchema<Schema>(firestore);
+     *
+     * ( ... ).get(documentSnapshot => {
+     *   // Makes `dataAsUser` have type `UserDataType`. This passes the
+     *   // schema path as a TypeScript generic.
+     *   const dataAsUser = path.castToSchema<"users/{uid}">(
+     *     documentSnapshot.data()
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `SomePostDataType`. This passes
+     *   // the schema path as a JavaScript value instead of as a
+     *   // TypeScript generic.
+     *   const dataAsPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "posts/specificPostID"
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `UserDataType |
+     *   // SomePostDataType`. This happens because
+     *   // `{any collection}/specificPostID` matches both
+     *   // `users/specificPostID` and `posts/specificPostID`.
+     *   // Even though `specificPostID` is unlikely to match a
+     *   // user ID, it's still a valid schema path to a possible
+     *   // document, and should be narrowed if necessary.
+     *   const dataAsUserOrPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "{any collection}/specificPostID"
+     *   );
+     * });
+     * ```
+     *
+     * @param value The object to cast to the specified schema.
+     * @param optionalPath A path to the collection or document from the root of
+     *        the database whose schema will be used for casting the value.
+     * @returns The passed-in `value`, cast to the specified schema.
+     */
     castToSchema<Path extends string>(value: DocumentData, optionalPath?: Path | undefined): SchemaAtPath<FirestoreSchema, Path, true>;
+    /**
+     * Casts an object to the specified schema as determined by the path to the
+     * document/collection.
+     *
+     * You can pass the path to the document/collection as a TypeScript generic
+     * value (i.e., `castToSchema<"path/to/document">(value)`) or as a JavaScript
+     * string value (i.e., `castToSchema(value, "path/to/collection")`).
+     *
+     * You can specify "wildcard" values by surrounding one of the path segments
+     * in `{` braces `}`. This will match the schema of *all*
+     * documents/collections at that path segment.
+     *
+     * @example
+     * ```ts
+     * type Schema = {
+     *   users: {
+     *     [uid: string]: {
+     *       [DOCUMENT_SCHEMA]: UserDataType;
+     *     }
+     *   },
+     *   posts: {
+     *     specificPostID: {
+     *       [DOCUMENT_SCHEMA]: SomePostDataType;
+     *     }
+     *   }
+     * }
+     * const path = withSchema<Schema>(firestore);
+     *
+     * ( ... ).get(documentSnapshot => {
+     *   // Makes `dataAsUser` have type `UserDataType`. This passes the
+     *   // schema path as a TypeScript generic.
+     *   const dataAsUser = path.castToSchema<"users/{uid}">(
+     *     documentSnapshot.data()
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `SomePostDataType`. This passes
+     *   // the schema path as a JavaScript value instead of as a
+     *   // TypeScript generic.
+     *   const dataAsPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "posts/specificPostID"
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `UserDataType |
+     *   // SomePostDataType`. This happens because
+     *   // `{any collection}/specificPostID` matches both
+     *   // `users/specificPostID` and `posts/specificPostID`.
+     *   // Even though `specificPostID` is unlikely to match a
+     *   // user ID, it's still a valid schema path to a possible
+     *   // document, and should be narrowed if necessary.
+     *   const dataAsUserOrPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "{any collection}/specificPostID"
+     *   );
+     * });
+     * ```
+     *
+     * @param value The object to cast to the specified schema.
+     * @param optionalPath A path to the collection or document from the root of
+     *        the database whose schema will be used for casting the value.
+     * @returns The passed-in `value`, cast to the specified schema.
+     */
+    castToSchema<Path extends string>(value: DocumentData | undefined, optionalPath?: Path | undefined): SchemaAtPath<FirestoreSchema, Path, true> | undefined;
+    /**
+     * Casts an object to the specified schema as determined by the path to the
+     * document/collection.
+     *
+     * You can pass the path to the document/collection as a TypeScript generic
+     * value (i.e., `castToSchema<"path/to/document">(value)`) or as a JavaScript
+     * string value (i.e., `castToSchema(value, "path/to/collection")`).
+     *
+     * You can specify "wildcard" values by surrounding one of the path segments
+     * in `{` braces `}`. This will match the schema of *all*
+     * documents/collections at that path segment.
+     *
+     * @example
+     * ```ts
+     * type Schema = {
+     *   users: {
+     *     [uid: string]: {
+     *       [DOCUMENT_SCHEMA]: UserDataType;
+     *     }
+     *   },
+     *   posts: {
+     *     specificPostID: {
+     *       [DOCUMENT_SCHEMA]: SomePostDataType;
+     *     }
+     *   }
+     * }
+     * const path = withSchema<Schema>(firestore);
+     *
+     * ( ... ).get(documentSnapshot => {
+     *   // Makes `dataAsUser` have type `UserDataType`. This passes the
+     *   // schema path as a TypeScript generic.
+     *   const dataAsUser = path.castToSchema<"users/{uid}">(
+     *     documentSnapshot.data()
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `SomePostDataType`. This passes
+     *   // the schema path as a JavaScript value instead of as a
+     *   // TypeScript generic.
+     *   const dataAsPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "posts/specificPostID"
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `UserDataType |
+     *   // SomePostDataType`. This happens because
+     *   // `{any collection}/specificPostID` matches both
+     *   // `users/specificPostID` and `posts/specificPostID`.
+     *   // Even though `specificPostID` is unlikely to match a
+     *   // user ID, it's still a valid schema path to a possible
+     *   // document, and should be narrowed if necessary.
+     *   const dataAsUserOrPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "{any collection}/specificPostID"
+     *   );
+     * });
+     * ```
+     *
+     * @param value The object to cast to the specified schema.
+     * @param optionalPath A path to the collection or document from the root of
+     *        the database whose schema will be used for casting the value.
+     * @returns The passed-in `value`, cast to the specified schema.
+     */
     castToSchema<Path extends string>(value: Query, optionalPath?: Path | undefined): Query<SchemaAtPath<FirestoreSchema, Path, true>>;
+    /**
+     * Casts an object to the specified schema as determined by the path to the
+     * document/collection.
+     *
+     * You can pass the path to the document/collection as a TypeScript generic
+     * value (i.e., `castToSchema<"path/to/document">(value)`) or as a JavaScript
+     * string value (i.e., `castToSchema(value, "path/to/collection")`).
+     *
+     * You can specify "wildcard" values by surrounding one of the path segments
+     * in `{` braces `}`. This will match the schema of *all*
+     * documents/collections at that path segment.
+     *
+     * @example
+     * ```ts
+     * type Schema = {
+     *   users: {
+     *     [uid: string]: {
+     *       [DOCUMENT_SCHEMA]: UserDataType;
+     *     }
+     *   },
+     *   posts: {
+     *     specificPostID: {
+     *       [DOCUMENT_SCHEMA]: SomePostDataType;
+     *     }
+     *   }
+     * }
+     * const path = withSchema<Schema>(firestore);
+     *
+     * ( ... ).get(documentSnapshot => {
+     *   // Makes `dataAsUser` have type `UserDataType`. This passes the
+     *   // schema path as a TypeScript generic.
+     *   const dataAsUser = path.castToSchema<"users/{uid}">(
+     *     documentSnapshot.data()
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `SomePostDataType`. This passes
+     *   // the schema path as a JavaScript value instead of as a
+     *   // TypeScript generic.
+     *   const dataAsPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "posts/specificPostID"
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `UserDataType |
+     *   // SomePostDataType`. This happens because
+     *   // `{any collection}/specificPostID` matches both
+     *   // `users/specificPostID` and `posts/specificPostID`.
+     *   // Even though `specificPostID` is unlikely to match a
+     *   // user ID, it's still a valid schema path to a possible
+     *   // document, and should be narrowed if necessary.
+     *   const dataAsUserOrPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "{any collection}/specificPostID"
+     *   );
+     * });
+     * ```
+     *
+     * @param value The object to cast to the specified schema.
+     * @param optionalPath A path to the collection or document from the root of
+     *        the database whose schema will be used for casting the value.
+     * @returns The passed-in `value`, cast to the specified schema.
+     */
     castToSchema<Path extends string>(value: CollectionGroup, optionalPath?: Path | undefined): CollectionGroup<SchemaAtPath<FirestoreSchema, Path, true>>;
+    /**
+     * Casts an object to the specified schema as determined by the path to the
+     * document/collection.
+     *
+     * You can pass the path to the document/collection as a TypeScript generic
+     * value (i.e., `castToSchema<"path/to/document">(value)`) or as a JavaScript
+     * string value (i.e., `castToSchema(value, "path/to/collection")`).
+     *
+     * You can specify "wildcard" values by surrounding one of the path segments
+     * in `{` braces `}`. This will match the schema of *all*
+     * documents/collections at that path segment.
+     *
+     * @example
+     * ```ts
+     * type Schema = {
+     *   users: {
+     *     [uid: string]: {
+     *       [DOCUMENT_SCHEMA]: UserDataType;
+     *     }
+     *   },
+     *   posts: {
+     *     specificPostID: {
+     *       [DOCUMENT_SCHEMA]: SomePostDataType;
+     *     }
+     *   }
+     * }
+     * const path = withSchema<Schema>(firestore);
+     *
+     * ( ... ).get(documentSnapshot => {
+     *   // Makes `dataAsUser` have type `UserDataType`. This passes the
+     *   // schema path as a TypeScript generic.
+     *   const dataAsUser = path.castToSchema<"users/{uid}">(
+     *     documentSnapshot.data()
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `SomePostDataType`. This passes
+     *   // the schema path as a JavaScript value instead of as a
+     *   // TypeScript generic.
+     *   const dataAsPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "posts/specificPostID"
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `UserDataType |
+     *   // SomePostDataType`. This happens because
+     *   // `{any collection}/specificPostID` matches both
+     *   // `users/specificPostID` and `posts/specificPostID`.
+     *   // Even though `specificPostID` is unlikely to match a
+     *   // user ID, it's still a valid schema path to a possible
+     *   // document, and should be narrowed if necessary.
+     *   const dataAsUserOrPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "{any collection}/specificPostID"
+     *   );
+     * });
+     * ```
+     *
+     * @param value The object to cast to the specified schema.
+     * @param optionalPath A path to the collection or document from the root of
+     *        the database whose schema will be used for casting the value.
+     * @returns The passed-in `value`, cast to the specified schema.
+     */
     castToSchema<Path extends string>(value: CollectionReference, optionalPath?: Path | undefined): CollectionReference<SchemaAtPath<FirestoreSchema, Path, true>>;
+    /**
+     * Casts an object to the specified schema as determined by the path to the
+     * document/collection.
+     *
+     * You can pass the path to the document/collection as a TypeScript generic
+     * value (i.e., `castToSchema<"path/to/document">(value)`) or as a JavaScript
+     * string value (i.e., `castToSchema(value, "path/to/collection")`).
+     *
+     * You can specify "wildcard" values by surrounding one of the path segments
+     * in `{` braces `}`. This will match the schema of *all*
+     * documents/collections at that path segment.
+     *
+     * @example
+     * ```ts
+     * type Schema = {
+     *   users: {
+     *     [uid: string]: {
+     *       [DOCUMENT_SCHEMA]: UserDataType;
+     *     }
+     *   },
+     *   posts: {
+     *     specificPostID: {
+     *       [DOCUMENT_SCHEMA]: SomePostDataType;
+     *     }
+     *   }
+     * }
+     * const path = withSchema<Schema>(firestore);
+     *
+     * ( ... ).get(documentSnapshot => {
+     *   // Makes `dataAsUser` have type `UserDataType`. This passes the
+     *   // schema path as a TypeScript generic.
+     *   const dataAsUser = path.castToSchema<"users/{uid}">(
+     *     documentSnapshot.data()
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `SomePostDataType`. This passes
+     *   // the schema path as a JavaScript value instead of as a
+     *   // TypeScript generic.
+     *   const dataAsPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "posts/specificPostID"
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `UserDataType |
+     *   // SomePostDataType`. This happens because
+     *   // `{any collection}/specificPostID` matches both
+     *   // `users/specificPostID` and `posts/specificPostID`.
+     *   // Even though `specificPostID` is unlikely to match a
+     *   // user ID, it's still a valid schema path to a possible
+     *   // document, and should be narrowed if necessary.
+     *   const dataAsUserOrPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "{any collection}/specificPostID"
+     *   );
+     * });
+     * ```
+     *
+     * @param value The object to cast to the specified schema.
+     * @param optionalPath A path to the collection or document from the root of
+     *        the database whose schema will be used for casting the value.
+     * @returns The passed-in `value`, cast to the specified schema.
+     */
     castToSchema<Path extends string>(value: DocumentSnapshot, optionalPath?: Path | undefined): DocumentSnapshot<SchemaAtPath<FirestoreSchema, Path, true>>;
+    /**
+     * Casts an object to the specified schema as determined by the path to the
+     * document/collection.
+     *
+     * You can pass the path to the document/collection as a TypeScript generic
+     * value (i.e., `castToSchema<"path/to/document">(value)`) or as a JavaScript
+     * string value (i.e., `castToSchema(value, "path/to/collection")`).
+     *
+     * You can specify "wildcard" values by surrounding one of the path segments
+     * in `{` braces `}`. This will match the schema of *all*
+     * documents/collections at that path segment.
+     *
+     * @example
+     * ```ts
+     * type Schema = {
+     *   users: {
+     *     [uid: string]: {
+     *       [DOCUMENT_SCHEMA]: UserDataType;
+     *     }
+     *   },
+     *   posts: {
+     *     specificPostID: {
+     *       [DOCUMENT_SCHEMA]: SomePostDataType;
+     *     }
+     *   }
+     * }
+     * const path = withSchema<Schema>(firestore);
+     *
+     * ( ... ).get(documentSnapshot => {
+     *   // Makes `dataAsUser` have type `UserDataType`. This passes the
+     *   // schema path as a TypeScript generic.
+     *   const dataAsUser = path.castToSchema<"users/{uid}">(
+     *     documentSnapshot.data()
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `SomePostDataType`. This passes
+     *   // the schema path as a JavaScript value instead of as a
+     *   // TypeScript generic.
+     *   const dataAsPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "posts/specificPostID"
+     *   );
+     *
+     *   // Makes `dataAsPost` have type `UserDataType |
+     *   // SomePostDataType`. This happens because
+     *   // `{any collection}/specificPostID` matches both
+     *   // `users/specificPostID` and `posts/specificPostID`.
+     *   // Even though `specificPostID` is unlikely to match a
+     *   // user ID, it's still a valid schema path to a possible
+     *   // document, and should be narrowed if necessary.
+     *   const dataAsUserOrPost = path.castToSchema(
+     *     documentSnapshot.data(),
+     *     "{any collection}/specificPostID"
+     *   );
+     * });
+     * ```
+     *
+     * @param value The object to cast to the specified schema.
+     * @param optionalPath A path to the collection or document from the root of
+     *        the database whose schema will be used for casting the value.
+     * @returns The passed-in `value`, cast to the specified schema.
+     */
     castToSchema<Path extends string>(value: DocumentReference, optionalPath?: Path | undefined): DocumentReference<SchemaAtPath<FirestoreSchema, Path, true>>;
     /**
      * Gets a `CollectionWrapper` instance that refers to the collection at the
@@ -59,6 +494,8 @@ declare class Path<FirestoreSchema extends GenericFirestoreSchema> {
      * @param pathSegments A list of path segments that index a specific
      *        collection.
      * @return The `CollectionWrapper` instance.
+     * @throws {TypeError} If the number of path segments is even (which would
+     *        correspond to a document instead of a collection).
      */
     collection<PathSegments extends string[]>(...pathSegments: PathSegments): string[] extends PathSegments ? CollectionWrapper<GenericFirestoreCollection, never> : IsMalformedPath<PathSegments> extends true ? never : JoinPathSegments<PathSegments> extends infer R ? R extends string ? IndexByPath<FirestoreSchema, R, false> extends infer Q ? Q extends GenericFirestoreDocument ? never : Q extends GenericFirestoreCollection ? CollectionWrapper<Q, never> : never : never : never : never;
     /**
@@ -88,6 +525,8 @@ declare class Path<FirestoreSchema extends GenericFirestoreSchema> {
      * @param pathSegments A list of path segments that index a specific
      *        collection.
      * @return The `DocumentWrapper` instance.
+     * @throws {TypeError} If the number of path segments is odd (which would
+     *        correspond to a collection instead of a document).
      */
     doc<PathSegments extends string[]>(...pathSegments: PathSegments): string[] extends PathSegments ? DocumentWrapper<GenericFirestoreDocument, never> : IsMalformedPath<PathSegments> extends true ? never : JoinPathSegments<PathSegments> extends infer R ? R extends string ? IndexByPath<FirestoreSchema, R, false> extends infer Q ? Q extends GenericFirestoreDocument ? DocumentWrapper<Q, never> : never : never : never : never;
     /**
