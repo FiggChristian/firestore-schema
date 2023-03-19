@@ -1,17 +1,7 @@
 {
-  "name": "@firestore-schema/admin",
+  "name": "@firestore-schema/core",
   "version": "0.1.2",
-  "description": "Enforce schema types on your Firestore database.",
-  "keywords": [
-    "TypeScript",
-    "Firestore",
-    "Firebase",
-    "schema",
-    "database",
-    "types",
-    "document"
-  ],
-  "homepage": "https://github.com/FiggChristian/firestore-schema/tree/main/admin#readme",
+  "homepage": "https://github.com/FiggChristian/firestore-schema/tree/main/core#readme",
   "bugs": "https://github.com/FiggChristian/firestore-schema/issues",
   "license": "MIT",
   "author": "Christian Figueroa <figgchristian@gmail.com>",
@@ -29,7 +19,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/FiggChristian/firestore-schema.git",
-    "directory": "admin"
+    "directory": "core"
   },
   "scripts": {
     "babel:esm": "npx babel src --root-mode upward --env-name esm --extensions '.ts' --out-dir dist/esm",
@@ -37,12 +27,6 @@
     "babel": "npm run babel:esm && npm run babel:cjs",
     "build": "npm run babel && tsc",
     "prepack": "npm run build"
-  },
-  "dependencies": {
-    "@firestore-schema/core": "^0.1.2"
-  },
-  "peerDependencies": {
-    "@google-cloud/firestore": "^6.4.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.21.0",

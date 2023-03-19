@@ -2,19 +2,18 @@ import type {
   DefaultIfNever,
   DocumentsIn,
   Expand,
+  GenericDocumentSchema,
   GenericFirestoreCollection,
   GenericFirestoreDocument,
   SchemaOfCollection,
-  SettableDocumentSchema,
   StrKeyof,
   UnionOfTuplesToIntersection,
-} from "./types";
+} from "@firestore-schema/core";
 import type {
-  CollectionReference,
-  DocumentData,
-  FirestoreDataConverter,
-  WithFieldValue,
-} from "firebase-admin/firestore";
+  SettableDocumentSchema,
+  TypedFirestoreDataConverter,
+} from "./types";
+import type FirebaseFirestore from "@google-cloud/firestore";
 import DocumentWrapper from "./DocumentWrapper";
 import QueryWrapper from "./QueryWrapper";
 
@@ -32,16 +31,26 @@ class CollectionWrapper<
   // `CollectionReference<ConvertedType>` though because the types are not
   // directly assignable to each other, so I had to use `any`.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  implements CollectionReference<any>
+  implements FirebaseFirestore.CollectionReference<any>
 {
   /** The raw Firebase `CollectionReference` instance. */
-  public declare ref: CollectionReference<
+  public declare ref: FirebaseFirestore.CollectionReference<
     DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
   >;
 
-  constructor(ref: CollectionReference<ConvertedType | DocumentData>) {
+  /**
+   * Creates a typed `CollectionWrapper` object around the specified
+   * `CollectionReference` object.
+   *
+   * @param ref The `CollectionReference` object to wrap.
+   */
+  constructor(
+    ref: FirebaseFirestore.CollectionReference<
+      ConvertedType | GenericDocumentSchema
+    >
+  ) {
     super(ref);
-    this.ref = ref as CollectionReference<
+    this.ref = ref as FirebaseFirestore.CollectionReference<
       DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
     >;
   }
@@ -244,7 +253,9 @@ class CollectionWrapper<
     ) extends infer R
       ? false extends R
         ? never
-        : WithFieldValue<Expand<UnionOfTuplesToIntersection<R>>>
+        : FirebaseFirestore.WithFieldValue<
+            Expand<UnionOfTuplesToIntersection<R>>
+          >
       : never
   ): (
     Collection extends GenericFirestoreCollection
@@ -258,7 +269,7 @@ class CollectionWrapper<
       : Promise<R>
     : never;
   add(
-    data: DefaultIfNever<ConvertedType, DocumentData>
+    data: DefaultIfNever<ConvertedType, GenericDocumentSchema>
   ): Promise<DocumentWrapper<Collection[string], ConvertedType>> {
     // Wrap the returned `DocumentReference` in a `DocumentWrapper` after the
     // Promise returns.
@@ -287,21 +298,21 @@ class CollectionWrapper<
    *        `CollectionReference`.
    */
   isEqual(
-    other: CollectionReference<
+    other: FirebaseFirestore.CollectionReference<
       DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
     >
   ): boolean;
   isEqual(
     other:
       | CollectionWrapper<GenericFirestoreCollection, ConvertedType>
-      | CollectionReference<
+      | FirebaseFirestore.CollectionReference<
           DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
         >
   ): boolean;
   isEqual(
     other:
       | CollectionWrapper<GenericFirestoreCollection, ConvertedType>
-      | CollectionReference<
+      | FirebaseFirestore.CollectionReference<
           DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
         >
   ): boolean {
@@ -321,7 +332,7 @@ class CollectionWrapper<
    * @return A `CollectionWrapper<U>` that uses the provided converter.
    */
   withConverter<U>(
-    converter: FirestoreDataConverter<U>
+    converter: TypedFirestoreDataConverter<SchemaOfCollection<Collection>, U>
   ): CollectionWrapper<Collection, U>;
   /**
    * Applies a custom data converter to this `CollectionWrapper`, allowing you
@@ -335,10 +346,16 @@ class CollectionWrapper<
    */
   withConverter(converter: null): CollectionWrapper<Collection, never>;
   withConverter<U>(
-    converter: FirestoreDataConverter<U> | null
+    converter: TypedFirestoreDataConverter<
+      SchemaOfCollection<Collection>,
+      U
+    > | null
   ): CollectionWrapper<Collection, never> | CollectionWrapper<Collection, U>;
   withConverter<U>(
-    converter: FirestoreDataConverter<U> | null
+    converter: TypedFirestoreDataConverter<
+      SchemaOfCollection<Collection>,
+      U
+    > | null
   ): CollectionWrapper<Collection, never> | CollectionWrapper<Collection, U> {
     return new CollectionWrapper(
       // Pretty stupid, but TypeScript forces us to choose one of the two

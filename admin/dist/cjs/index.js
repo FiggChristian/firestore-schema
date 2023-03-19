@@ -15,6 +15,12 @@ Object.defineProperty(exports, "CollectionWrapper", {
     return _CollectionWrapper.default;
   }
 });
+Object.defineProperty(exports, "DOCUMENT_SCHEMA", {
+  enumerable: true,
+  get: function () {
+    return _core.DOCUMENT_SCHEMA;
+  }
+});
 Object.defineProperty(exports, "DocumentWrapper", {
   enumerable: true,
   get: function () {
@@ -24,7 +30,7 @@ Object.defineProperty(exports, "DocumentWrapper", {
 Object.defineProperty(exports, "Path", {
   enumerable: true,
   get: function () {
-    return _Path.default;
+    return _FirestoreWrapper.default;
   }
 });
 Object.defineProperty(exports, "QueryWrapper", {
@@ -34,14 +40,15 @@ Object.defineProperty(exports, "QueryWrapper", {
   }
 });
 exports.withSchema = exports.default = void 0;
+var _core = require("@firestore-schema/core");
 var _CollectionGroupWrapper = _interopRequireDefault(require("./CollectionGroupWrapper"));
 var _CollectionWrapper = _interopRequireDefault(require("./CollectionWrapper"));
 var _DocumentWrapper = _interopRequireDefault(require("./DocumentWrapper"));
-var _Path = _interopRequireDefault(require("./Path"));
+var _FirestoreWrapper = _interopRequireDefault(require("./FirestoreWrapper"));
 var _QueryWrapper = _interopRequireDefault(require("./QueryWrapper"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 const withSchema = firestore => {
-  return new _Path.default(firestore);
+  return new _FirestoreWrapper.default(firestore);
 };
 exports.withSchema = withSchema;
 var _default = withSchema;

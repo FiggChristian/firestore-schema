@@ -10,6 +10,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 class CollectionGroupWrapper extends _QueryWrapper.default {
   /** The raw Firebase `CollectionGroup` instance. */
 
+  /**
+   * Creates a typed `CollectionGroupWrapper` object around the specified
+   * `CollectionGroup` object.
+   *
+   * @param ref The `CollectionGroup` object to wrap.
+   */
   constructor(ref) {
     super(ref);
     this.ref = ref;

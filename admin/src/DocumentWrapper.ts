@@ -1,28 +1,19 @@
 import type {
   DefaultIfNever,
+  GenericDocumentSchema,
   GenericFirestoreCollection,
   GenericFirestoreDocument,
-  GettableDocumentSchema,
   SchemaKeysOf,
   SchemaOfDocument,
-  SettableDocumentSchema,
   StrKeyof,
-  SubcollectionsIn,
-} from "./types";
+  SubCollectionsIn,
+} from "@firestore-schema/core";
 import type {
-  DocumentData,
-  DocumentReference,
-  DocumentSnapshot,
-  FieldPath,
-  Firestore,
-  FirestoreDataConverter,
-  PartialWithFieldValue,
-  Precondition,
-  SetOptions,
-  UpdateData,
-  WithFieldValue,
-  WriteResult,
-} from "firebase-admin/firestore";
+  GettableDocumentSchema,
+  SettableDocumentSchema,
+  TypedFirestoreDataConverter,
+} from "./types";
+import type FirebaseFirestore from "@google-cloud/firestore";
 import CollectionWrapper from "./CollectionWrapper";
 
 /** A typed wrapper class around Firestore `DocumentReference` objects. */
@@ -35,15 +26,25 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
   // `DocumentReference<ConvertedType>` though because the types are not
   // directly assignable to each other, so I had to use `any`.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  implements DocumentReference<any>
+  implements FirebaseFirestore.DocumentReference<any>
 {
   /** The raw Firebase `DocumentReference` instance. */
-  public ref: DocumentReference<
+  public ref: FirebaseFirestore.DocumentReference<
     DefaultIfNever<ConvertedType, SchemaOfDocument<Document>>
   >;
 
-  constructor(ref: DocumentReference<ConvertedType | DocumentData>) {
-    this.ref = ref as DocumentReference<
+  /**
+   * Creates a typed `DocumentWrapper` object around the specified
+   * `DocumentReference` object.
+   *
+   * @param ref The `DocumentReference` object to wrap.
+   */
+  constructor(
+    ref: FirebaseFirestore.DocumentReference<
+      ConvertedType | GenericDocumentSchema
+    >
+  ) {
+    this.ref = ref as FirebaseFirestore.DocumentReference<
       DefaultIfNever<ConvertedType, SchemaOfDocument<Document>>
     >;
   }
@@ -57,7 +58,7 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    * The `Firestore` for the Firestore database (useful for performing
    * transactions, etc.).
    */
-  get firestore(): Firestore {
+  get firestore(): FirebaseFirestore.Firestore {
     // This is wrapped in a getter instead of being assigned directly because
     // the implementation of `Query.firestore` is also a getter, and thus not
     // guaranteed to return the same value every time (even though I'm pretty
@@ -108,14 +109,14 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    * @returns A Promise that resolves with an array of `CollectionWrapper`s.
    */
   listCollections(): Promise<
-    CollectionWrapper<SubcollectionsIn<Document>, never>[]
+    CollectionWrapper<SubCollectionsIn<Document>, never>[]
   > {
     return this.ref
       .listCollections()
       .then((collections) =>
         collections.map(
           (collection) =>
-            new CollectionWrapper<SubcollectionsIn<Document>, never>(collection)
+            new CollectionWrapper<SubCollectionsIn<Document>, never>(collection)
         )
       );
   }
@@ -129,10 +130,10 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    * @return A Promise resolved with the write time of this create.
    */
   create(
-    data: WithFieldValue<
+    data: FirebaseFirestore.WithFieldValue<
       DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>
     >
-  ): Promise<WriteResult> {
+  ): Promise<FirebaseFirestore.WriteResult> {
     return this.ref.create(data);
   }
 
@@ -145,10 +146,10 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    * @return A Promise resolved with the write time of this set.
    */
   set(
-    data: WithFieldValue<
+    data: FirebaseFirestore.WithFieldValue<
       DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>
     >
-  ): Promise<WriteResult>;
+  ): Promise<FirebaseFirestore.WriteResult>;
   /**
    * Writes to the document referred to by this `DocumentWrapper`. If the
    * document does not yet exist, it will be created. If you pass `options`, the
@@ -168,20 +169,26 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    * @return A Promise resolved with the write time of this set.
    */
   set(
-    data: PartialWithFieldValue<
+    data: FirebaseFirestore.PartialWithFieldValue<
       DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>
     >,
-    options: SetOptions
-  ): Promise<WriteResult>;
+    options: FirebaseFirestore.SetOptions
+  ): Promise<FirebaseFirestore.WriteResult>;
   set(
     data:
-      | PartialWithFieldValue<DefaultIfNever<ConvertedType, DocumentData>>
-      | WithFieldValue<DefaultIfNever<ConvertedType, DocumentData>>,
-    options?: SetOptions
+      | FirebaseFirestore.PartialWithFieldValue<
+          DefaultIfNever<ConvertedType, GenericDocumentSchema>
+        >
+      | FirebaseFirestore.WithFieldValue<
+          DefaultIfNever<ConvertedType, GenericDocumentSchema>
+        >,
+    options?: FirebaseFirestore.SetOptions
   ) {
     if (options === undefined) {
       return this.ref.set(
-        data as WithFieldValue<DefaultIfNever<ConvertedType, DocumentData>>
+        data as FirebaseFirestore.WithFieldValue<
+          DefaultIfNever<ConvertedType, GenericDocumentSchema>
+        >
       );
     } else {
       return this.ref.set(data, options);
@@ -201,11 +208,11 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    * @return A Promise resolved with the write time of this update.
    */
   update(
-    data: UpdateData<
+    data: FirebaseFirestore.UpdateData<
       DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>
     >,
-    precondition?: Precondition
-  ): Promise<WriteResult>;
+    precondition?: FirebaseFirestore.Precondition
+  ): Promise<FirebaseFirestore.WriteResult>;
   /**
    * Updates fields in the doCument referred to by this `DocumentWrapper`. The
    * update will fail if applied to a document that does not exist.
@@ -225,30 +232,35 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    * @return A Promise resolved with the write time of this update.
    */
   update(
-    field: SchemaKeysOf<Document> | FieldPath,
+    field: SchemaKeysOf<Document> | FirebaseFirestore.FieldPath,
     value: unknown,
     ...moreFieldsOrPrecondition: unknown[]
-  ): Promise<WriteResult>;
+  ): Promise<FirebaseFirestore.WriteResult>;
   update(
     dataOrField:
-      | UpdateData<DefaultIfNever<ConvertedType, DocumentData>>
+      | FirebaseFirestore.UpdateData<
+          DefaultIfNever<ConvertedType, GenericDocumentSchema>
+        >
       | string
-      | FieldPath,
-    preconditionOrValue?: Precondition | unknown,
+      | FirebaseFirestore.FieldPath,
+    preconditionOrValue?: FirebaseFirestore.Precondition | unknown,
     ...moreFieldsOrPrecondition: unknown[]
-  ): Promise<WriteResult>;
+  ): Promise<FirebaseFirestore.WriteResult>;
   update(
-    dataOrField: UpdateData<ConvertedType | DocumentData> | string | FieldPath,
-    preconditionOrValue?: Precondition | unknown,
+    dataOrField:
+      | FirebaseFirestore.UpdateData<ConvertedType | GenericDocumentSchema>
+      | string
+      | FirebaseFirestore.FieldPath,
+    preconditionOrValue?: FirebaseFirestore.Precondition | unknown,
     ...moreFieldsOrPrecondition: unknown[]
-  ): Promise<WriteResult> {
+  ): Promise<FirebaseFirestore.WriteResult> {
     // Firestore has two function overloads for `update()` that aren't
     // compatible with each other. Instead of trying to play with TypeScript to
     // get it to work somehow, we just choose the second function overload since
     // the actual JavaScript implementation of `update()` should be able to
     // handle either one anyway.
     return this.ref.update(
-      dataOrField as string | FieldPath,
+      dataOrField as string | FirebaseFirestore.FieldPath,
       preconditionOrValue as unknown,
       ...moreFieldsOrPrecondition
     );
@@ -260,7 +272,9 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    * @param precondition A Precondition to enforce for this delete.
    * @return A Promise resolved with the write time of this delete.
    */
-  delete(precondition?: Precondition): Promise<WriteResult> {
+  delete(
+    precondition?: FirebaseFirestore.Precondition
+  ): Promise<FirebaseFirestore.WriteResult> {
     return this.ref.delete(precondition);
   }
 
@@ -271,13 +285,17 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    *        current document contents.
    */
   get(): Promise<
-    DocumentSnapshot<
+    FirebaseFirestore.DocumentSnapshot<
       DefaultIfNever<ConvertedType, GettableDocumentSchema<Document>>
     >
   >;
-  get(): Promise<DocumentSnapshot<ConvertedType | DocumentData>> {
+  get(): Promise<
+    FirebaseFirestore.DocumentSnapshot<ConvertedType | GenericDocumentSchema>
+  > {
     return (
-      this.ref as DocumentReference<DefaultIfNever<ConvertedType, DocumentData>>
+      this.ref as FirebaseFirestore.DocumentReference<
+        DefaultIfNever<ConvertedType, GenericDocumentSchema>
+      >
     ).get();
   }
 
@@ -293,14 +311,14 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    */
   onSnapshot(
     onNext: (
-      snapshot: DocumentSnapshot<
+      snapshot: FirebaseFirestore.DocumentSnapshot<
         DefaultIfNever<ConvertedType, GettableDocumentSchema<Document>>
       >
     ) => void,
     onError?: (error: Error) => void
   ): () => void {
     return (
-      this.ref as DocumentReference<
+      this.ref as FirebaseFirestore.DocumentReference<
         DefaultIfNever<ConvertedType, GettableDocumentSchema<Document>>
       >
     ).onSnapshot(onNext, onError);
@@ -324,21 +342,21 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    *        `DocumentReference`.
    */
   isEqual(
-    other: DocumentReference<
+    other: FirebaseFirestore.DocumentReference<
       DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>
     >
   ): boolean;
   isEqual(
     other:
       | DocumentWrapper<GenericFirestoreDocument, ConvertedType>
-      | DocumentReference<
+      | FirebaseFirestore.DocumentReference<
           DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>
         >
   ): boolean;
   isEqual(
     other:
       | DocumentWrapper<GenericFirestoreDocument, ConvertedType>
-      | DocumentReference<
+      | FirebaseFirestore.DocumentReference<
           DefaultIfNever<ConvertedType, SettableDocumentSchema<Document>>
         >
   ): boolean {
@@ -358,7 +376,7 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    * @return A `DocumentWrapper<U>` that uses the provided converter.
    */
   withConverter<U>(
-    converter: FirestoreDataConverter<U>
+    converter: TypedFirestoreDataConverter<SchemaOfDocument<Document>, U>
   ): DocumentWrapper<Document, U>;
   /**
    * Applies a custom data converter to this `DocumentWrapper`, allowing you to
@@ -372,10 +390,10 @@ class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
    */
   withConverter(converter: null): DocumentWrapper<Document, never>;
   withConverter<U>(
-    converter: FirestoreDataConverter<U> | null
+    converter: TypedFirestoreDataConverter<SchemaOfDocument<Document>, U> | null
   ): DocumentWrapper<Document, never> | DocumentWrapper<Document, U>;
   withConverter<U>(
-    converter: FirestoreDataConverter<U> | null
+    converter: TypedFirestoreDataConverter<SchemaOfDocument<Document>, U> | null
   ): DocumentWrapper<Document, never> | DocumentWrapper<Document, U> {
     return new DocumentWrapper(
       // Pretty stupid, but TypeScript forces us to choose one of the two

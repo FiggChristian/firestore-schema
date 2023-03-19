@@ -40,6 +40,12 @@ exports.default = void 0;
 class QueryWrapper {
   /** The raw Firebase `Query` instance. */
   ref;
+
+  /**
+   * Creates a typed `QueryWrapper` object around the specified `Query` object.
+   *
+   * @param ref The `Query` object to wrap.
+   */
   constructor(ref) {
     this.ref = ref;
   }
@@ -80,11 +86,7 @@ class QueryWrapper {
    */
 
   where(fieldPathOrFilter, opStr, value) {
-    if (opStr == null) {
-      return new QueryWrapper(this.ref.where(fieldPathOrFilter));
-    } else {
-      return new QueryWrapper(this.ref.where(fieldPathOrFilter, opStr, value));
-    }
+    return new QueryWrapper(this.ref.where(fieldPathOrFilter, opStr, value));
   }
   // #endregion
 

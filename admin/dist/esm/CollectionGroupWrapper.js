@@ -3,6 +3,12 @@ import QueryWrapper from "./QueryWrapper";
 class CollectionGroupWrapper extends QueryWrapper {
   /** The raw Firebase `CollectionGroup` instance. */
 
+  /**
+   * Creates a typed `CollectionGroupWrapper` object around the specified
+   * `CollectionGroup` object.
+   *
+   * @param ref The `CollectionGroup` object to wrap.
+   */
   constructor(ref) {
     super(ref);
     this.ref = ref;

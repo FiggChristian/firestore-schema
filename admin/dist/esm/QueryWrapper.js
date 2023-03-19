@@ -40,6 +40,11 @@ function _toPrimitive(input, hint) { if (typeof input !== "object" || input === 
 class QueryWrapper {
   /** The raw Firebase `Query` instance. */
 
+  /**
+   * Creates a typed `QueryWrapper` object around the specified `Query` object.
+   *
+   * @param ref The `Query` object to wrap.
+   */
   constructor(ref) {
     _defineProperty(this, "ref", void 0);
     this.ref = ref;
@@ -81,11 +86,7 @@ class QueryWrapper {
    */
 
   where(fieldPathOrFilter, opStr, value) {
-    if (opStr == null) {
-      return new QueryWrapper(this.ref.where(fieldPathOrFilter));
-    } else {
-      return new QueryWrapper(this.ref.where(fieldPathOrFilter, opStr, value));
-    }
+    return new QueryWrapper(this.ref.where(fieldPathOrFilter, opStr, value));
   }
   // #endregion
 

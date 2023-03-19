@@ -1,6 +1,7 @@
 /// <reference types="node" />
-import type { DocumentData, DocumentSnapshot, FieldPath, Firestore, FirestoreDataConverter, OrderByDirection, Query, QuerySnapshot, WhereFilterOp } from "firebase-admin/firestore";
-import type { DocumentsIn, Expand, GenericFirestoreCollection, GenericFirestoreDocument, GettableFirestoreDataType, GettableFirestoreDataTypeNoArray, SchemaKeysOf, StrKeyof, SchemaOfCollection, DefaultIfNever, SchemaOfDocument, DOCUMENT_SCHEMA } from "./types";
+import type FirebaseFirestore from "@google-cloud/firestore";
+import type { DocumentsIn, Expand, GenericDocumentSchema, GenericFirestoreCollection, GenericFirestoreDocument, SchemaKeysOf, StrKeyof, SchemaOfCollection, DefaultIfNever, SchemaOfDocument } from "@firestore-schema/core";
+import type { GettableFirestoreDataType, GettableFirestoreDataTypeNoArray, TypedFirestoreDataConverter } from "./types";
 /**
  * A type that filters out documents from `Collection`, which can be a single
  * `Collection` or a union of `Collection`s, that do not have have the specified
@@ -40,15 +41,20 @@ type EnsureValueExtendsDocumentKey<Collection extends GenericFirestoreCollection
     [SpecificDocumentName in StrKeyof<Collection>]: SpecificDocumentName extends string ? Collection[SpecificDocumentName] extends GenericFirestoreDocument ? Key extends StrKeyof<SchemaOfDocument<Collection[SpecificDocumentName]>> ? Extends extends SchemaOfDocument<Collection[SpecificDocumentName]>[Key] ? SpecificDocumentName : never : never : never : never;
 }[StrKeyof<Collection>]>> extends infer FilteredCollection ? FilteredCollection extends Record<string, never> ? never : FilteredCollection : never : never;
 /** A typed wrapper class around Firestore `Query` objects. */
-declare class QueryWrapper<Collection extends GenericFirestoreCollection, ConvertedType> implements Query<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>> {
+declare class QueryWrapper<Collection extends GenericFirestoreCollection, ConvertedType> implements FirebaseFirestore.Query<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>> {
     /** The raw Firebase `Query` instance. */
-    ref: Query<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>;
-    constructor(ref: Query<ConvertedType | DocumentData>);
+    ref: FirebaseFirestore.Query<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>;
+    /**
+     * Creates a typed `QueryWrapper` object around the specified `Query` object.
+     *
+     * @param ref The `Query` object to wrap.
+     */
+    constructor(ref: FirebaseFirestore.Query<ConvertedType | GenericDocumentSchema>);
     /**
      * The `Firestore` for the Firestore database (useful for performing
      * transactions, etc.).
      */
-    get firestore(): Firestore;
+    get firestore(): FirebaseFirestore.Firestore;
     /**
      * Creates and returns a new `QueryWrapper` with the additional filter that
      * documents must contain the specified field and that its value should
@@ -76,7 +82,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @param value The value for comparison
      * @return The created `QueryWrapper`.
      */
-    where<InType extends GettableFirestoreDataType>(fieldPath: string | FieldPath, opStr: "in", value: InType[]): EnsureValueExtendsDocumentKey<Collection, string, InType> extends infer R ? R extends GenericFirestoreCollection ? QueryWrapper<R, ConvertedType> : never : never;
+    where<InType extends GettableFirestoreDataType>(fieldPath: string | FirebaseFirestore.FieldPath, opStr: "in", value: InType[]): EnsureValueExtendsDocumentKey<Collection, string, InType> extends infer R ? R extends GenericFirestoreCollection ? QueryWrapper<R, ConvertedType> : never : never;
     /**
      * Creates and returns a new `QueryWrapper` with the additional filter that
      * documents must contain the specified field and that its value should
@@ -104,7 +110,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @param value The value for comparison
      * @return The created `QueryWrapper`.
      */
-    where<ContainsType extends GettableFirestoreDataTypeNoArray>(fieldPath: string | FieldPath, opStr: "array-contains", value: ContainsType): EnsureValueExtendsDocumentKey<Collection, string, ContainsType[]> extends infer R ? R extends GenericFirestoreCollection ? QueryWrapper<R, ConvertedType> : never : never;
+    where<ContainsType extends GettableFirestoreDataTypeNoArray>(fieldPath: string | FirebaseFirestore.FieldPath, opStr: "array-contains", value: ContainsType): EnsureValueExtendsDocumentKey<Collection, string, ContainsType[]> extends infer R ? R extends GenericFirestoreCollection ? QueryWrapper<R, ConvertedType> : never : never;
     /**
      * Creates and returns a new `QueryWrapper` with the additional filter that
      * documents must contain the specified field and that its value should
@@ -132,7 +138,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @param value The value for comparison
      * @return The created `QueryWrapper`.
      */
-    where<ContainsAnyType extends GettableFirestoreDataTypeNoArray>(fieldPath: string | FieldPath, opStr: "array-contains-any", value: ContainsAnyType[]): EnsureValueExtendsDocumentKey<Collection, string, ContainsAnyType[]> extends infer R ? R extends GenericFirestoreCollection ? QueryWrapper<R, ConvertedType> : never : never;
+    where<ContainsAnyType extends GettableFirestoreDataTypeNoArray>(fieldPath: string | FirebaseFirestore.FieldPath, opStr: "array-contains-any", value: ContainsAnyType[]): EnsureValueExtendsDocumentKey<Collection, string, ContainsAnyType[]> extends infer R ? R extends GenericFirestoreCollection ? QueryWrapper<R, ConvertedType> : never : never;
     /**
      * Creates and returns a new `QueryWrapper` with the additional filter that
      * documents must contain the specified field and that its value should
@@ -160,7 +166,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @param value The value for comparison
      * @return The created `QueryWrapper`.
      */
-    where<CompareType extends GettableFirestoreDataType>(fieldPath: string | FieldPath, opStr: "==" | "<=" | ">=" | "<" | ">", value: CompareType): EnsureValueExtendsDocumentKey<Collection, string, CompareType> extends infer R ? R extends GenericFirestoreCollection ? QueryWrapper<R, ConvertedType> : never : never;
+    where<CompareType extends GettableFirestoreDataType>(fieldPath: string | FirebaseFirestore.FieldPath, opStr: "==" | "<=" | ">=" | "<" | ">", value: CompareType): EnsureValueExtendsDocumentKey<Collection, string, CompareType> extends infer R ? R extends GenericFirestoreCollection ? QueryWrapper<R, ConvertedType> : never : never;
     /**
      * Creates and returns a new `QueryWrapper` with the additional filter that
      * documents must contain the specified field and that its value should
@@ -188,7 +194,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @param value The value for comparison
      * @return The created `QueryWrapper`.
      */
-    where<CompareType extends GettableFirestoreDataType>(fieldPath: string | FieldPath, opStr: "!=", value: CompareType): EnsureDocumentKeyDoesNotExtendValue<Collection, string, CompareType> extends infer R ? R extends GenericFirestoreCollection ? QueryWrapper<R, ConvertedType> : never : never;
+    where<CompareType extends GettableFirestoreDataType>(fieldPath: string | FirebaseFirestore.FieldPath, opStr: "!=", value: CompareType): EnsureDocumentKeyDoesNotExtendValue<Collection, string, CompareType> extends infer R ? R extends GenericFirestoreCollection ? QueryWrapper<R, ConvertedType> : never : never;
     /**
      * Creates and returns a new `QueryWrapper` with the additional filter that
      * documents must contain the specified field and that its value should
@@ -202,7 +208,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @param value The value for comparison
      * @return The created `QueryWrapper`.
      */
-    where<FieldPathType extends SchemaKeysOf<DocumentsIn<Collection>>>(fieldPath: FieldPathType, opStr: WhereFilterOp, value: unknown): EnsureDocumentHasKey<Collection, FieldPathType> extends infer R ? R extends GenericFirestoreCollection ? QueryWrapper<R, ConvertedType> : never : never;
+    where<FieldPathType extends SchemaKeysOf<DocumentsIn<Collection>>>(fieldPath: FieldPathType, opStr: FirebaseFirestore.WhereFilterOp, value: unknown): EnsureDocumentHasKey<Collection, FieldPathType> extends infer R ? R extends GenericFirestoreCollection ? QueryWrapper<R, ConvertedType> : never : never;
     /**
      * Creates and returns a new `QueryWrapper` with the additional filter that
      * documents must contain the specified field and that its value should
@@ -216,19 +222,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @param value The value for comparison
      * @return The created `QueryWrapper`.
      */
-    where(fieldPath: string | FieldPath, opStr: WhereFilterOp, value: unknown): QueryWrapper<Collection, ConvertedType>;
-    /**
-     * Creates and returns a new `QueryWrapper` with the additional filter that
-     * documents should satisfy the relation constraint provided. Documents must
-     * contain the field specified in the filter.
-     *
-     * This function returns a new (immutable) instance of the `QueryWrapper`
-     * (rather than modify the existing instance) to impose the filter.
-     *
-     * @param filter A filter to apply to the `QueryWrapper`.
-     * @returns The created `QueryWrapper`.
-     */
-    where(filter: FirebaseFirestore.Filter): QueryWrapper<Collection, ConvertedType>;
+    where(fieldPath: string | FirebaseFirestore.FieldPath, opStr: FirebaseFirestore.WhereFilterOp, value: unknown): QueryWrapper<Collection, ConvertedType>;
     /**
      * Creates and returns a new `QueryWrapper` that's additionally sorted by the
      * specified field, optionally in descending order instead of ascending.
@@ -241,7 +235,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      *        specified, order will be ascending.
      * @return The created `QueryWrapper`.
      */
-    orderBy(fieldPath: string | FieldPath, directionStr?: OrderByDirection): QueryWrapper<Collection, ConvertedType>;
+    orderBy(fieldPath: string | FirebaseFirestore.FieldPath, directionStr?: FirebaseFirestore.OrderByDirection): QueryWrapper<Collection, ConvertedType>;
     /**
      * Creates and returns a new `QueryWrapper` that only returns the first
      * matching documents.
@@ -294,7 +288,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      */
     select(): Collection extends GenericFirestoreCollection ? QueryWrapper<{
         [CollectionKey in keyof Collection]: CollectionKey extends string ? Collection[CollectionKey] extends infer Document ? Document extends GenericFirestoreDocument ? {
-            [DocumentKey in keyof Document]: DocumentKey extends DOCUMENT_SCHEMA ? Expand<Pick<Document[DocumentKey], never>> : Document[DocumentKey];
+            [DocumentKey in keyof Document]: DocumentKey extends symbol ? Expand<Pick<Document[DocumentKey], never>> : Document[DocumentKey];
         } : never : never : Collection[CollectionKey];
     }, never> : never;
     /**
@@ -314,7 +308,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      */
     select<Fields extends SchemaKeysOf<DocumentsIn<Collection>>>(...field: Fields[]): Collection extends GenericFirestoreCollection ? QueryWrapper<{
         [CollectionKey in keyof Collection]: CollectionKey extends string ? Collection[CollectionKey] extends infer Document ? Document extends GenericFirestoreDocument ? {
-            [DocumentKey in keyof Document]: DocumentKey extends DOCUMENT_SCHEMA ? Document[DocumentKey] extends infer Schema ? Schema extends DocumentData ? Expand<Pick<Schema, Extract<keyof Schema, Fields>>> : never : never : Document[DocumentKey];
+            [DocumentKey in keyof Document]: DocumentKey extends symbol ? Document[DocumentKey] extends infer Schema ? Schema extends GenericDocumentSchema ? Expand<Pick<Schema, Extract<keyof Schema, Fields>>> : never : never : Document[DocumentKey];
         } : never : never : Collection[CollectionKey];
     }, never> : never;
     /**
@@ -332,7 +326,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @param field The field paths to return.
      * @return The created `QueryWrapper`.
      */
-    select(...field: (string | FieldPath)[]): QueryWrapper<GenericFirestoreCollection, never>;
+    select(...field: (string | FirebaseFirestore.FieldPath)[]): QueryWrapper<GenericFirestoreCollection, never>;
     /**
      * Creates and returns a new `QueryWrapper` that starts at the provided
      * document (inclusive). The starting position is relative to the order of the
@@ -342,7 +336,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @param snapshot The snapshot of the document to start after.
      * @return The created `QueryWrapper`.
      */
-    startAt(snapshot: DocumentSnapshot): QueryWrapper<Collection, ConvertedType>;
+    startAt(snapshot: FirebaseFirestore.DocumentSnapshot): QueryWrapper<Collection, ConvertedType>;
     /**
      * Creates and returns a new `QueryWrapper` that starts at the provided fields
      * relative to the order of the query. The order of the field values must
@@ -362,7 +356,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @param snapshot The snapshot of the document to start after.
      * @return The created `QueryWrapper`.
      */
-    startAfter(snapshot: DocumentSnapshot): QueryWrapper<Collection, ConvertedType>;
+    startAfter(snapshot: FirebaseFirestore.DocumentSnapshot): QueryWrapper<Collection, ConvertedType>;
     /**
      * Creates and returns a new `QueryWrapper` that starts after the provided
      * fields relative to the order of the query. The order of the field values
@@ -382,7 +376,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @param snapshot The snapshot of the document to end before.
      * @return The created `QueryWrapper`.
      */
-    endBefore(snapshot: DocumentSnapshot): QueryWrapper<Collection, ConvertedType>;
+    endBefore(snapshot: FirebaseFirestore.DocumentSnapshot): QueryWrapper<Collection, ConvertedType>;
     /**
      * Creates and returns a new `QueryWrapper` that ends before the provided
      * fields relative to the order of the query. The order of the field values
@@ -402,7 +396,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @param snapshot The snapshot of the document to end at.
      * @return The created `QueryWrapper`.
      */
-    endAt(snapshot: DocumentSnapshot): QueryWrapper<Collection, ConvertedType>;
+    endAt(snapshot: FirebaseFirestore.DocumentSnapshot): QueryWrapper<Collection, ConvertedType>;
     /**
      * Creates and returns a new `QueryWrapper` that ends at the provided fields
      * relative to the order of the query. The order of the field values must
@@ -419,7 +413,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @return A Promise that will be resolved with the results of the
      *        `QueryWrapper`.
      */
-    get(): Promise<QuerySnapshot<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>>;
+    get(): Promise<FirebaseFirestore.QuerySnapshot<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>>;
     /**
      * Executes the query and returns the results as Node Stream.
      *
@@ -436,7 +430,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @return An unsubscribe function that can be called to cancel
      *        the snapshot listener.
      */
-    onSnapshot(onNext: (snapshot: QuerySnapshot<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>) => void, onError?: (error: Error) => void): () => void;
+    onSnapshot(onNext: (snapshot: FirebaseFirestore.QuerySnapshot<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>) => void, onError?: (error: Error) => void): () => void;
     /**
      * Returns a query that counts the documents in the result set of this query.
      *
@@ -471,8 +465,8 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @return true if this `QueryWrapper`'s `ref` is equal to the provided
      *        `Query`.
      */
-    isEqual(other: Query<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>): boolean;
-    isEqual(other: QueryWrapper<GenericFirestoreCollection, ConvertedType> | Query<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>): boolean;
+    isEqual(other: FirebaseFirestore.Query<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>): boolean;
+    isEqual(other: QueryWrapper<GenericFirestoreCollection, ConvertedType> | FirebaseFirestore.Query<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>): boolean;
     /**
      * Applies a custom data converter to this `QueryWrapper`, allowing you to use
      * your own custom model objects with Firestore. When you call `get()` on the
@@ -483,7 +477,7 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      *        removes the current converter.
      * @return A `QueryWrapper<U>` that uses the provided converter.
      */
-    withConverter<U>(converter: FirestoreDataConverter<U>): QueryWrapper<Collection, U>;
+    withConverter<U>(converter: TypedFirestoreDataConverter<SchemaOfCollection<Collection>, U>): QueryWrapper<Collection, U>;
     /**
      * Applies a custom data converter to this `QueryWrapper`, allowing you to use
      * your own custom model objects with Firestore. When you call `get()` on the
@@ -495,6 +489,6 @@ declare class QueryWrapper<Collection extends GenericFirestoreCollection, Conver
      * @return A `QueryWrapper<U>` that uses the provided converter.
      */
     withConverter(converter: null): QueryWrapper<Collection, never>;
-    withConverter<U>(converter: FirestoreDataConverter<U> | null): QueryWrapper<Collection, never> | QueryWrapper<Collection, U>;
+    withConverter<U>(converter: TypedFirestoreDataConverter<SchemaOfCollection<Collection>, U> | null): QueryWrapper<Collection, never> | QueryWrapper<Collection, U>;
 }
 export default QueryWrapper;

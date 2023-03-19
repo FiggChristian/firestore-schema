@@ -1,13 +1,17 @@
-import type { CollectionGroup, CollectionReference, DocumentReference, DocumentSnapshot, Query } from "firebase-admin/firestore";
+import type FirebaseFirestore from "@google-cloud/firestore";
 import type { Expand, GenericDocumentSchema, GenericFirestoreCollection, GenericFirestoreDocument, GenericFirestoreSchema, IndexByCollectionGroupID, IndexByPath, IsMalformedPath, JoinPathSegments, SchemaAtPath, StrKeyof } from "@firestore-schema/core";
 import CollectionWrapper from "./CollectionWrapper";
 import DocumentWrapper from "./DocumentWrapper";
 import CollectionGroupWrapper from "./CollectionGroupWrapper";
-declare class Path<FirestoreSchema extends GenericFirestoreSchema> {
-    /**
-     * The Firestore object that was used to create the `Path`.
-     */
+declare class FirestoreWrapper<FirestoreSchema extends GenericFirestoreSchema> {
+    /** The Firestore object that was used to create the `FirestoreWrapper`. */
     firestore: FirebaseFirestore.Firestore;
+    /**
+     * Creates a typed `FirestoreWrapper` object around the specified `Firestore`
+     * object.
+     *
+     * @param firestore The `Firestore` object to wrap.
+     */
     constructor(firestore: FirebaseFirestore.Firestore);
     /**
      * Casts an object to the specified schema as determined by the path to the
@@ -197,7 +201,7 @@ declare class Path<FirestoreSchema extends GenericFirestoreSchema> {
      *        the database whose schema will be used for casting the value.
      * @returns The passed-in `value`, cast to the specified schema.
      */
-    castToSchema<Path extends string>(value: Query, optionalPath?: Path | undefined): Query<SchemaAtPath<FirestoreSchema, Path, true>>;
+    castToSchema<Path extends string>(value: FirebaseFirestore.Query, optionalPath?: Path | undefined): FirebaseFirestore.Query<SchemaAtPath<FirestoreSchema, Path, true>>;
     /**
      * Casts an object to the specified schema as determined by the path to the
      * document/collection.
@@ -260,7 +264,7 @@ declare class Path<FirestoreSchema extends GenericFirestoreSchema> {
      *        the database whose schema will be used for casting the value.
      * @returns The passed-in `value`, cast to the specified schema.
      */
-    castToSchema<Path extends string>(value: CollectionGroup, optionalPath?: Path | undefined): CollectionGroup<SchemaAtPath<FirestoreSchema, Path, true>>;
+    castToSchema<Path extends string>(value: FirebaseFirestore.CollectionGroup, optionalPath?: Path | undefined): FirebaseFirestore.CollectionGroup<SchemaAtPath<FirestoreSchema, Path, true>>;
     /**
      * Casts an object to the specified schema as determined by the path to the
      * document/collection.
@@ -323,7 +327,7 @@ declare class Path<FirestoreSchema extends GenericFirestoreSchema> {
      *        the database whose schema will be used for casting the value.
      * @returns The passed-in `value`, cast to the specified schema.
      */
-    castToSchema<Path extends string>(value: CollectionReference, optionalPath?: Path | undefined): CollectionReference<SchemaAtPath<FirestoreSchema, Path, true>>;
+    castToSchema<Path extends string>(value: FirebaseFirestore.CollectionReference, optionalPath?: Path | undefined): FirebaseFirestore.CollectionReference<SchemaAtPath<FirestoreSchema, Path, true>>;
     /**
      * Casts an object to the specified schema as determined by the path to the
      * document/collection.
@@ -386,7 +390,7 @@ declare class Path<FirestoreSchema extends GenericFirestoreSchema> {
      *        the database whose schema will be used for casting the value.
      * @returns The passed-in `value`, cast to the specified schema.
      */
-    castToSchema<Path extends string>(value: DocumentSnapshot, optionalPath?: Path | undefined): DocumentSnapshot<SchemaAtPath<FirestoreSchema, Path, true>>;
+    castToSchema<Path extends string>(value: FirebaseFirestore.DocumentSnapshot, optionalPath?: Path | undefined): FirebaseFirestore.DocumentSnapshot<SchemaAtPath<FirestoreSchema, Path, true>>;
     /**
      * Casts an object to the specified schema as determined by the path to the
      * document/collection.
@@ -449,7 +453,7 @@ declare class Path<FirestoreSchema extends GenericFirestoreSchema> {
      *        the database whose schema will be used for casting the value.
      * @returns The passed-in `value`, cast to the specified schema.
      */
-    castToSchema<Path extends string>(value: DocumentReference, optionalPath?: Path | undefined): DocumentReference<SchemaAtPath<FirestoreSchema, Path, true>>;
+    castToSchema<Path extends string>(value: FirebaseFirestore.DocumentReference, optionalPath?: Path | undefined): FirebaseFirestore.DocumentReference<SchemaAtPath<FirestoreSchema, Path, true>>;
     /**
      * Gets a `CollectionWrapper` instance that refers to the collection at the
      * specified path.
@@ -543,4 +547,4 @@ declare class Path<FirestoreSchema extends GenericFirestoreSchema> {
         infer R
     ] ? [R] extends [GenericFirestoreCollection] ? CollectionGroupWrapper<Expand<R>, never> : never : never;
 }
-export default Path;
+export default FirestoreWrapper;

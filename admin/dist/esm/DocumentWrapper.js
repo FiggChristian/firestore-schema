@@ -12,6 +12,12 @@ import CollectionWrapper from "./CollectionWrapper";
 class DocumentWrapper {
   /** The raw Firebase `DocumentReference` instance. */
 
+  /**
+   * Creates a typed `DocumentWrapper` object around the specified
+   * `DocumentReference` object.
+   *
+   * @param ref The `DocumentReference` object to wrap.
+   */
   constructor(ref) {
     _defineProperty(this, "ref", void 0);
     this.ref = ref;

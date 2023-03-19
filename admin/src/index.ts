@@ -1,20 +1,20 @@
-import type { Firestore } from "firebase-admin/firestore";
+import type FirebaseFirestore from "@google-cloud/firestore";
+import { DOCUMENT_SCHEMA } from "@firestore-schema/core";
 import type {
-  DOCUMENT_SCHEMA,
   GenericFirestoreSchema,
   GenericFirestoreCollection,
   GenericFirestoreDocument,
-} from "./types";
+} from "@firestore-schema/core";
 import CollectionGroupWrapper from "./CollectionGroupWrapper";
 import CollectionWrapper from "./CollectionWrapper";
 import DocumentWrapper from "./DocumentWrapper";
-import Path from "./Path";
+import FirestoreWrapper from "./FirestoreWrapper";
 import QueryWrapper from "./QueryWrapper";
 
 const withSchema = <FirestoreSchema extends GenericFirestoreSchema>(
-  firestore: Firestore
-): Path<FirestoreSchema> => {
-  return new Path<FirestoreSchema>(firestore);
+  firestore: FirebaseFirestore.Firestore
+): FirestoreWrapper<FirestoreSchema> => {
+  return new FirestoreWrapper<FirestoreSchema>(firestore);
 };
 
 export {
@@ -25,7 +25,7 @@ export {
   GenericFirestoreSchema,
   GenericFirestoreCollection,
   GenericFirestoreDocument,
-  Path,
+  FirestoreWrapper as Path,
   QueryWrapper,
   withSchema,
 };

@@ -12,6 +12,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 class DocumentWrapper {
   /** The raw Firebase `DocumentReference` instance. */
   ref;
+
+  /**
+   * Creates a typed `DocumentWrapper` object around the specified
+   * `DocumentReference` object.
+   *
+   * @param ref The `DocumentReference` object to wrap.
+   */
   constructor(ref) {
     this.ref = ref;
   }

@@ -1,12 +1,19 @@
-import type { DefaultIfNever, DocumentsIn, Expand, GenericFirestoreCollection, GenericFirestoreDocument, SchemaOfCollection, SettableDocumentSchema, StrKeyof, UnionOfTuplesToIntersection } from "./types";
-import type { CollectionReference, DocumentData, FirestoreDataConverter, WithFieldValue } from "firebase-admin/firestore";
+import type { DefaultIfNever, DocumentsIn, Expand, GenericDocumentSchema, GenericFirestoreCollection, GenericFirestoreDocument, SchemaOfCollection, StrKeyof, UnionOfTuplesToIntersection } from "@firestore-schema/core";
+import type { SettableDocumentSchema, TypedFirestoreDataConverter } from "./types";
+import type FirebaseFirestore from "@google-cloud/firestore";
 import DocumentWrapper from "./DocumentWrapper";
 import QueryWrapper from "./QueryWrapper";
 /** A typed wrapper class around Firestore `CollectionReference` objects. */
-declare class CollectionWrapper<Collection extends GenericFirestoreCollection, ConvertedType> extends QueryWrapper<Collection, ConvertedType> implements CollectionReference<any> {
+declare class CollectionWrapper<Collection extends GenericFirestoreCollection, ConvertedType> extends QueryWrapper<Collection, ConvertedType> implements FirebaseFirestore.CollectionReference<any> {
     /** The raw Firebase `CollectionReference` instance. */
-    ref: CollectionReference<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>;
-    constructor(ref: CollectionReference<ConvertedType | DocumentData>);
+    ref: FirebaseFirestore.CollectionReference<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>;
+    /**
+     * Creates a typed `CollectionWrapper` object around the specified
+     * `CollectionReference` object.
+     *
+     * @param ref The `CollectionReference` object to wrap.
+     */
+    constructor(ref: FirebaseFirestore.CollectionReference<ConvertedType | GenericDocumentSchema>);
     /** The identifier of the collection. */
     get id(): string;
     /**
@@ -119,7 +126,7 @@ declare class CollectionWrapper<Collection extends GenericFirestoreCollection, C
      */
     add(data: (Collection extends GenericFirestoreCollection ? string extends StrKeyof<Collection> ? [
         DefaultIfNever<ConvertedType, SettableDocumentSchema<Collection[string]>>
-    ] : false : never) extends infer R ? false extends R ? never : WithFieldValue<Expand<UnionOfTuplesToIntersection<R>>> : never): (Collection extends GenericFirestoreCollection ? string extends StrKeyof<Collection> ? DocumentWrapper<Collection[string], ConvertedType> : false : never) extends infer R ? false extends R ? never : Promise<R> : never;
+    ] : false : never) extends infer R ? false extends R ? never : FirebaseFirestore.WithFieldValue<Expand<UnionOfTuplesToIntersection<R>>> : never): (Collection extends GenericFirestoreCollection ? string extends StrKeyof<Collection> ? DocumentWrapper<Collection[string], ConvertedType> : false : never) extends infer R ? false extends R ? never : Promise<R> : never;
     /**
      * Returns true if this `CollectionWrapper` is equal to the provided one.
      *
@@ -135,8 +142,8 @@ declare class CollectionWrapper<Collection extends GenericFirestoreCollection, C
      * @return true if this `CollectionWrapper`'s `ref` is equal to the provided
      *        `CollectionReference`.
      */
-    isEqual(other: CollectionReference<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>): boolean;
-    isEqual(other: CollectionWrapper<GenericFirestoreCollection, ConvertedType> | CollectionReference<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>): boolean;
+    isEqual(other: FirebaseFirestore.CollectionReference<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>): boolean;
+    isEqual(other: CollectionWrapper<GenericFirestoreCollection, ConvertedType> | FirebaseFirestore.CollectionReference<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>): boolean;
     /**
      * Applies a custom data converter to this `CollectionWrapper`, allowing you
      * to use your own custom model objects with Firestore. When you call `get()`
@@ -147,7 +154,7 @@ declare class CollectionWrapper<Collection extends GenericFirestoreCollection, C
      *        removes the current converter.
      * @return A `CollectionWrapper<U>` that uses the provided converter.
      */
-    withConverter<U>(converter: FirestoreDataConverter<U>): CollectionWrapper<Collection, U>;
+    withConverter<U>(converter: TypedFirestoreDataConverter<SchemaOfCollection<Collection>, U>): CollectionWrapper<Collection, U>;
     /**
      * Applies a custom data converter to this `CollectionWrapper`, allowing you
      * to use your own custom model objects with Firestore. When you call `get()`
@@ -159,6 +166,6 @@ declare class CollectionWrapper<Collection extends GenericFirestoreCollection, C
      * @return A `CollectionWrapper<U>` that uses the provided converter.
      */
     withConverter(converter: null): CollectionWrapper<Collection, never>;
-    withConverter<U>(converter: FirestoreDataConverter<U> | null): CollectionWrapper<Collection, never> | CollectionWrapper<Collection, U>;
+    withConverter<U>(converter: TypedFirestoreDataConverter<SchemaOfCollection<Collection>, U> | null): CollectionWrapper<Collection, never> | CollectionWrapper<Collection, U>;
 }
 export default CollectionWrapper;

@@ -16,6 +16,12 @@ class CollectionWrapper extends QueryWrapper
 {
   /** The raw Firebase `CollectionReference` instance. */
 
+  /**
+   * Creates a typed `CollectionWrapper` object around the specified
+   * `CollectionReference` object.
+   *
+   * @param ref The `CollectionReference` object to wrap.
+   */
   constructor(ref) {
     super(ref);
     this.ref = ref;

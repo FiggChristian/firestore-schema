@@ -1,15 +1,12 @@
 import QueryWrapper from "./QueryWrapper";
 import type {
   DefaultIfNever,
+  GenericDocumentSchema,
   GenericFirestoreCollection,
   SchemaOfCollection,
-} from "./types";
-import type {
-  CollectionGroup,
-  DocumentData,
-  FirestoreDataConverter,
-  QueryPartition,
-} from "firebase-admin/firestore";
+} from "@firestore-schema/core";
+import type FirebaseFirestore from "@google-cloud/firestore";
+import { TypedFirestoreDataConverter } from "./types";
 
 /** A typed wrapper class around Firestore `CollectionGroup` objects. */
 class CollectionGroupWrapper<
@@ -18,18 +15,28 @@ class CollectionGroupWrapper<
   >
   extends QueryWrapper<Collection, ConvertedType>
   implements
-    CollectionGroup<
+    FirebaseFirestore.CollectionGroup<
       DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
     >
 {
   /** The raw Firebase `CollectionGroup` instance. */
-  public declare ref: CollectionGroup<
+  public declare ref: FirebaseFirestore.CollectionGroup<
     DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
   >;
 
-  constructor(ref: CollectionGroup<ConvertedType | DocumentData>) {
+  /**
+   * Creates a typed `CollectionGroupWrapper` object around the specified
+   * `CollectionGroup` object.
+   *
+   * @param ref The `CollectionGroup` object to wrap.
+   */
+  constructor(
+    ref: FirebaseFirestore.CollectionGroup<
+      ConvertedType | GenericDocumentSchema
+    >
+  ) {
     super(ref);
-    this.ref = ref as CollectionGroup<
+    this.ref = ref as FirebaseFirestore.CollectionGroup<
       DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
     >;
   }
@@ -47,7 +54,7 @@ class CollectionGroupWrapper<
   getPartitions(
     desiredPartitionCount: number
   ): AsyncIterable<
-    QueryPartition<
+    FirebaseFirestore.QueryPartition<
       DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>
     >
   > {
@@ -65,7 +72,7 @@ class CollectionGroupWrapper<
    * @return A `QueryWrapper<U>` that uses the provided converter.
    */
   withConverter<U>(
-    converter: FirestoreDataConverter<U>
+    converter: TypedFirestoreDataConverter<SchemaOfCollection<Collection>, U>
   ): CollectionGroupWrapper<Collection, U>;
   /**
    * Applies a custom data converter to this `QueryWrapper`, allowing you to use
@@ -79,12 +86,18 @@ class CollectionGroupWrapper<
    */
   withConverter(converter: null): CollectionGroupWrapper<Collection, never>;
   withConverter<U>(
-    converter: FirestoreDataConverter<U> | null
+    converter: TypedFirestoreDataConverter<
+      SchemaOfCollection<Collection>,
+      U
+    > | null
   ):
     | CollectionGroupWrapper<Collection, never>
     | CollectionGroupWrapper<Collection, U>;
   withConverter<U>(
-    converter: FirestoreDataConverter<U> | null
+    converter: TypedFirestoreDataConverter<
+      SchemaOfCollection<Collection>,
+      U
+    > | null
   ):
     | CollectionGroupWrapper<Collection, never>
     | CollectionGroupWrapper<Collection, U> {

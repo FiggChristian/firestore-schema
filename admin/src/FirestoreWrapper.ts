@@ -1,13 +1,7 @@
-import type {
-  CollectionGroup,
-  CollectionReference,
-  DocumentData,
-  DocumentReference,
-  DocumentSnapshot,
-  Query,
-} from "firebase-admin/firestore";
+import type FirebaseFirestore from "@google-cloud/firestore";
 import type {
   Expand,
+  GenericDocumentSchema,
   GenericFirestoreCollection,
   GenericFirestoreDocument,
   GenericFirestoreSchema,
@@ -17,17 +11,21 @@ import type {
   JoinPathSegments,
   SchemaAtPath,
   StrKeyof,
-} from "./types";
+} from "@firestore-schema/core";
 import CollectionWrapper from "./CollectionWrapper";
 import DocumentWrapper from "./DocumentWrapper";
 import CollectionGroupWrapper from "./CollectionGroupWrapper";
 
-class Path<FirestoreSchema extends GenericFirestoreSchema> {
-  /**
-   * The Firestore object that was used to create the `Path`.
-   */
+class FirestoreWrapper<FirestoreSchema extends GenericFirestoreSchema> {
+  /** The Firestore object that was used to create the `FirestoreWrapper`. */
   public firestore: FirebaseFirestore.Firestore;
 
+  /**
+   * Creates a typed `FirestoreWrapper` object around the specified `Firestore`
+   * object.
+   *
+   * @param firestore The `Firestore` object to wrap.
+   */
   constructor(firestore: FirebaseFirestore.Firestore) {
     this.firestore = firestore;
   }
@@ -95,7 +93,7 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
    * @returns The passed-in `value`, cast to the specified schema.
    */
   castToSchema<Path extends string>(
-    value: DocumentData,
+    value: GenericDocumentSchema,
     optionalPath?: Path | undefined
   ): SchemaAtPath<FirestoreSchema, Path, true>;
   /**
@@ -161,7 +159,7 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
    * @returns The passed-in `value`, cast to the specified schema.
    */
   castToSchema<Path extends string>(
-    value: DocumentData | undefined,
+    value: GenericDocumentSchema | undefined,
     optionalPath?: Path | undefined
   ): SchemaAtPath<FirestoreSchema, Path, true> | undefined;
   /**
@@ -227,9 +225,9 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
    * @returns The passed-in `value`, cast to the specified schema.
    */
   castToSchema<Path extends string>(
-    value: Query,
+    value: FirebaseFirestore.Query,
     optionalPath?: Path | undefined
-  ): Query<SchemaAtPath<FirestoreSchema, Path, true>>;
+  ): FirebaseFirestore.Query<SchemaAtPath<FirestoreSchema, Path, true>>;
   /**
    * Casts an object to the specified schema as determined by the path to the
    * document/collection.
@@ -293,9 +291,11 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
    * @returns The passed-in `value`, cast to the specified schema.
    */
   castToSchema<Path extends string>(
-    value: CollectionGroup,
+    value: FirebaseFirestore.CollectionGroup,
     optionalPath?: Path | undefined
-  ): CollectionGroup<SchemaAtPath<FirestoreSchema, Path, true>>;
+  ): FirebaseFirestore.CollectionGroup<
+    SchemaAtPath<FirestoreSchema, Path, true>
+  >;
   /**
    * Casts an object to the specified schema as determined by the path to the
    * document/collection.
@@ -359,9 +359,11 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
    * @returns The passed-in `value`, cast to the specified schema.
    */
   castToSchema<Path extends string>(
-    value: CollectionReference,
+    value: FirebaseFirestore.CollectionReference,
     optionalPath?: Path | undefined
-  ): CollectionReference<SchemaAtPath<FirestoreSchema, Path, true>>;
+  ): FirebaseFirestore.CollectionReference<
+    SchemaAtPath<FirestoreSchema, Path, true>
+  >;
   /**
    * Casts an object to the specified schema as determined by the path to the
    * document/collection.
@@ -425,9 +427,11 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
    * @returns The passed-in `value`, cast to the specified schema.
    */
   castToSchema<Path extends string>(
-    value: DocumentSnapshot,
+    value: FirebaseFirestore.DocumentSnapshot,
     optionalPath?: Path | undefined
-  ): DocumentSnapshot<SchemaAtPath<FirestoreSchema, Path, true>>;
+  ): FirebaseFirestore.DocumentSnapshot<
+    SchemaAtPath<FirestoreSchema, Path, true>
+  >;
   /**
    * Casts an object to the specified schema as determined by the path to the
    * document/collection.
@@ -491,9 +495,11 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
    * @returns The passed-in `value`, cast to the specified schema.
    */
   castToSchema<Path extends string>(
-    value: DocumentReference,
+    value: FirebaseFirestore.DocumentReference,
     optionalPath?: Path | undefined
-  ): DocumentReference<SchemaAtPath<FirestoreSchema, Path, true>>;
+  ): FirebaseFirestore.DocumentReference<
+    SchemaAtPath<FirestoreSchema, Path, true>
+  >;
   castToSchema(value: unknown): unknown {
     // This function is purely to tell TypeScript the type of the passed-in
     // value, but the value itself is not used. We can just return it as-is.
@@ -585,7 +591,7 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
         throw new TypeError("Number of segments for a collection must be odd.");
       }
       let lastCollectionRef = this.firestore.collection(collectionPath);
-      let lastDocRef: DocumentReference;
+      let lastDocRef: FirebaseFirestore.DocumentReference;
       for (let i = 0; i < additionalSegments.length; i++) {
         if (i % 2 === 0) {
           lastDocRef = lastCollectionRef.doc(additionalSegments[i]);
@@ -661,7 +667,7 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
         throw new TypeError("Number of segments for a document must be even.");
       }
       let lastCollectionRef = this.firestore.collection(docPath);
-      let lastDocRef: DocumentReference;
+      let lastDocRef: FirebaseFirestore.DocumentReference;
       for (let i = 0; i < additionalSegments.length; i++) {
         if (i % 2 === 0) {
           lastDocRef = lastCollectionRef.doc(additionalSegments[i]);
@@ -705,4 +711,4 @@ class Path<FirestoreSchema extends GenericFirestoreSchema> {
   }
 }
 
-export default Path;
+export default FirestoreWrapper;
