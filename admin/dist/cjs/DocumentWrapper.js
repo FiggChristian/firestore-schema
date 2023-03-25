@@ -8,7 +8,25 @@ require("core-js/modules/esnext.async-iterator.map.js");
 require("core-js/modules/esnext.iterator.map.js");
 var _CollectionWrapper = _interopRequireDefault(require("./CollectionWrapper"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-/** A typed wrapper class around Firestore `DocumentReference` objects. */
+/**
+ * A typed wrapper class around Firestore
+ * {@link FirebaseFirestore.DocumentReference `DocumentReference`} objects.
+ *
+ * Instances of this class are usually created automatically by calling `.doc()`
+ * on a {@link FirestoreWrapper `FirestoreWrapper`} object.
+ *
+ * ```ts
+ * const firestore = withSchema<Schema>(unwrappedFirestore);
+ * const documentWrapper = firestore.doc("path/to/your/document");
+ * ```
+ *
+ * It includes the same methods as the underlying `DocumentReference` object
+ * with the same behavior so that it can be used interchangeably. It also
+ * includes the following additional properties:
+ *
+ * Properties:
+ * - {@link ref `ref`}
+ */
 class DocumentWrapper {
   /** The raw Firebase `DocumentReference` instance. */
   ref;

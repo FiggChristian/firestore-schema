@@ -10,6 +10,11 @@ import CollectionWrapper from "./CollectionWrapper";
 import DocumentWrapper from "./DocumentWrapper";
 import FirestoreWrapper from "./FirestoreWrapper";
 import QueryWrapper from "./QueryWrapper";
+import {
+  ReadOnlyTransactionWrapper,
+  ReadWriteTransactionWrapper,
+} from "./TransactionWrapper";
+import WriteBatchWrapper from "./WriteBatchWrapper";
 
 const withSchema = <FirestoreSchema extends GenericFirestoreSchema>(
   firestore: FirebaseFirestore.Firestore
@@ -25,9 +30,10 @@ export {
   GenericFirestoreSchema,
   GenericFirestoreCollection,
   GenericFirestoreDocument,
-  FirestoreWrapper as Path,
+  FirestoreWrapper,
   QueryWrapper,
+  ReadOnlyTransactionWrapper,
+  ReadWriteTransactionWrapper,
   withSchema,
+  WriteBatchWrapper,
 };
-
-export default withSchema;

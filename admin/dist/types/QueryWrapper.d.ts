@@ -1,46 +1,26 @@
 /// <reference types="node" />
 import type FirebaseFirestore from "@google-cloud/firestore";
-import type { DocumentsIn, Expand, GenericDocumentSchema, GenericFirestoreCollection, GenericFirestoreDocument, SchemaKeysOf, StrKeyof, SchemaOfCollection, DefaultIfNever, SchemaOfDocument } from "@firestore-schema/core";
-import type { GettableFirestoreDataType, GettableFirestoreDataTypeNoArray, TypedFirestoreDataConverter } from "./types";
+import type { DocumentsIn, Expand, GenericDocumentSchema, GenericFirestoreCollection, GenericFirestoreDocument, SchemaKeysOf, SchemaOfCollection, DefaultIfNever } from "@firestore-schema/core";
+import type { EnsureDocumentHasKey, EnsureDocumentKeyDoesNotExtendValue, EnsureValueExtendsDocumentKey, GettableFirestoreDataType, GettableFirestoreDataTypeNoArray, TypedFirestoreDataConverter } from "./types";
 /**
- * A type that filters out documents from `Collection`, which can be a single
- * `Collection` or a union of `Collection`s, that do not have have the specified
- * key in their schema. This will maintain the original structure of the
- * `Collection`(s) instead of combining their results into a single `Collection`
- * object or union of many different `Collection`s.
- */
-type EnsureDocumentHasKey<Collection extends GenericFirestoreCollection, Key extends string> = Collection extends GenericFirestoreCollection ? Expand<Pick<Collection, {
-    [SpecificDocumentName in StrKeyof<Collection>]: SpecificDocumentName extends string ? Collection[SpecificDocumentName] extends GenericFirestoreDocument ? Key extends StrKeyof<SchemaOfDocument<Collection[SpecificDocumentName]>> ? SpecificDocumentName : never : never : never;
-}[StrKeyof<Collection>]>> extends infer FilteredCollection ? FilteredCollection extends Record<string, never> ? never : FilteredCollection : never : never;
-/**
- * A type that filters out documents from `Collection`, which can be a single
- * `Collection` or a union of `Collection`s, that do not have have the specified
- * key in their schema, or where the associated value does not extend `Extends`.
- * This will maintain the original structure of the `Collection`(s) instead of
- * combining their results into a single `Collection` object or union of many
- * different `Collection`s.
+ * A typed wrapper class around Firestore
+ * {@link FirebaseFirestore.Query `Query`} objects.
  *
- * This type does the same as `EnsureDocumentHasKey`, with the additional check
- * that the value at the specified key extends `Extends`.
- */
-type EnsureDocumentKeyDoesNotExtendValue<Collection extends GenericFirestoreCollection, Key extends string, Extends> = Collection extends GenericFirestoreCollection ? Expand<Pick<Collection, {
-    [SpecificDocumentName in StrKeyof<Collection>]: SpecificDocumentName extends string ? Collection[SpecificDocumentName] extends GenericFirestoreDocument ? Key extends StrKeyof<SchemaOfDocument<Collection[SpecificDocumentName]>> ? SchemaOfDocument<Collection[SpecificDocumentName]>[Key] extends Extends ? never : SpecificDocumentName : never : never : never;
-}[StrKeyof<Collection>]>> extends infer FilteredCollection ? FilteredCollection extends Record<string, never> ? never : FilteredCollection : never : never;
-/**
- * A type that filters out documents from `Collection`, which can be a single
- * `Collection` or a union of `Collection`s, that do not have have the specified
- * key in their schema, or where `Extends` does not extend the associated value.
- * This will maintain the original structure of the `Collection`(s) instead of
- * combining their results into a single `Collection` object or union of many
- * different `Collection`s.
+ * Instances of this class are usually created automatically by calling
+ * different methods on a {@link FirestoreWrapper `FirestoreWrapper`} object.
  *
- * This type does the same as `EnsureDocumentHasKey`, with the additional check
- * that `Extends` extends the value at the specified key.
+ * ```ts
+ * const firestore = withSchema<Schema>(unwrappedFirestore);
+ * const queryWrapper = firestore.collectionGroup("collectionName").where( ... );
+ * ```
+ *
+ * It includes the same methods as the underlying `Query` object with the same
+ * behavior so that it can be used interchangeably. It also includes the
+ * following additional properties:
+ *
+ * Properties:
+ * - {@link ref `ref`}
  */
-type EnsureValueExtendsDocumentKey<Collection extends GenericFirestoreCollection, Key extends string, Extends> = Collection extends GenericFirestoreCollection ? Expand<Pick<Collection, {
-    [SpecificDocumentName in StrKeyof<Collection>]: SpecificDocumentName extends string ? Collection[SpecificDocumentName] extends GenericFirestoreDocument ? Key extends StrKeyof<SchemaOfDocument<Collection[SpecificDocumentName]>> ? Extends extends SchemaOfDocument<Collection[SpecificDocumentName]>[Key] ? SpecificDocumentName : never : never : never : never;
-}[StrKeyof<Collection>]>> extends infer FilteredCollection ? FilteredCollection extends Record<string, never> ? never : FilteredCollection : never : never;
-/** A typed wrapper class around Firestore `Query` objects. */
 declare class QueryWrapper<Collection extends GenericFirestoreCollection, ConvertedType> implements FirebaseFirestore.Query<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>> {
     /** The raw Firebase `Query` instance. */
     ref: FirebaseFirestore.Query<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>;

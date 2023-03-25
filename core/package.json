@@ -1,6 +1,6 @@
 {
   "name": "@firestore-schema/core",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "homepage": "https://github.com/FiggChristian/firestore-schema/tree/main/core#readme",
   "bugs": "https://github.com/FiggChristian/firestore-schema/issues",
   "license": "MIT",

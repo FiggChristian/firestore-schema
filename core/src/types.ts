@@ -126,7 +126,9 @@ export type SchemaOfCollection<Collection extends GenericFirestoreCollection> =
  * collections' documents.
  */
 export type DocumentsIn<Collection extends GenericFirestoreCollection> =
-  Collection extends GenericFirestoreCollection ? Collection[string] : never;
+  Collection extends GenericFirestoreCollection
+    ? Collection[StrKeyof<Collection>]
+    : never;
 
 /**
  * Returns all the sub-collections in a document. If `Document` is a union of

@@ -8,7 +8,25 @@ function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typ
 function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 import CollectionWrapper from "./CollectionWrapper";
 
-/** A typed wrapper class around Firestore `DocumentReference` objects. */
+/**
+ * A typed wrapper class around Firestore
+ * {@link FirebaseFirestore.DocumentReference `DocumentReference`} objects.
+ *
+ * Instances of this class are usually created automatically by calling `.doc()`
+ * on a {@link FirestoreWrapper `FirestoreWrapper`} object.
+ *
+ * ```ts
+ * const firestore = withSchema<Schema>(unwrappedFirestore);
+ * const documentWrapper = firestore.doc("path/to/your/document");
+ * ```
+ *
+ * It includes the same methods as the underlying `DocumentReference` object
+ * with the same behavior so that it can be used interchangeably. It also
+ * includes the following additional properties:
+ *
+ * Properties:
+ * - {@link ref `ref`}
+ */
 class DocumentWrapper {
   /** The raw Firebase `DocumentReference` instance. */
 

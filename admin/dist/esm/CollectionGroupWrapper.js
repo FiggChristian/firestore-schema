@@ -1,5 +1,23 @@
 import QueryWrapper from "./QueryWrapper";
-/** A typed wrapper class around Firestore `CollectionGroup` objects. */
+/**
+ * A typed wrapper class around Firestore
+ * {@link FirebaseFirestore.CollectionGroup `CollectionGroup`} objects.
+ *
+ * Instances of this class are usually created automatically by calling
+ * `.collectionGroup()` on a {@link FirestoreWrapper `FirestoreWrapper`} object.
+ *
+ * ```ts
+ * const firestore = withSchema<Schema>(unwrappedFirestore);
+ * const collectionGroupWrapper = firestore.collectionGroup("collectionName");
+ * ```
+ *
+ * It includes the same methods as the underlying `CollectionGroup` object with
+ * the same behavior so that it can be used interchangeably. It also includes
+ * the following additional properties:
+ *
+ * Properties:
+ * - {@link ref `ref`}
+ */
 class CollectionGroupWrapper extends QueryWrapper {
   /** The raw Firebase `CollectionGroup` instance. */
 

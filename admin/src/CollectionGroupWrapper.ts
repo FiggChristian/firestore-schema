@@ -6,9 +6,28 @@ import type {
   SchemaOfCollection,
 } from "@firestore-schema/core";
 import type FirebaseFirestore from "@google-cloud/firestore";
-import { TypedFirestoreDataConverter } from "./types";
+import type { TypedFirestoreDataConverter } from "./types";
+import type FirestoreWrapper from "./FirestoreWrapper";
 
-/** A typed wrapper class around Firestore `CollectionGroup` objects. */
+/**
+ * A typed wrapper class around Firestore
+ * {@link FirebaseFirestore.CollectionGroup `CollectionGroup`} objects.
+ *
+ * Instances of this class are usually created automatically by calling
+ * `.collectionGroup()` on a {@link FirestoreWrapper `FirestoreWrapper`} object.
+ *
+ * ```ts
+ * const firestore = withSchema<Schema>(unwrappedFirestore);
+ * const collectionGroupWrapper = firestore.collectionGroup("collectionName");
+ * ```
+ *
+ * It includes the same methods as the underlying `CollectionGroup` object with
+ * the same behavior so that it can be used interchangeably. It also includes
+ * the following additional properties:
+ *
+ * Properties:
+ * - {@link ref `ref`}
+ */
 class CollectionGroupWrapper<
     Collection extends GenericFirestoreCollection,
     ConvertedType = never

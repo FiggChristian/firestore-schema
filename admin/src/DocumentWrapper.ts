@@ -14,9 +14,28 @@ import type {
   TypedFirestoreDataConverter,
 } from "./types";
 import type FirebaseFirestore from "@google-cloud/firestore";
+import type FirestoreWrapper from "./FirestoreWrapper";
 import CollectionWrapper from "./CollectionWrapper";
 
-/** A typed wrapper class around Firestore `DocumentReference` objects. */
+/**
+ * A typed wrapper class around Firestore
+ * {@link FirebaseFirestore.DocumentReference `DocumentReference`} objects.
+ *
+ * Instances of this class are usually created automatically by calling `.doc()`
+ * on a {@link FirestoreWrapper `FirestoreWrapper`} object.
+ *
+ * ```ts
+ * const firestore = withSchema<Schema>(unwrappedFirestore);
+ * const documentWrapper = firestore.doc("path/to/your/document");
+ * ```
+ *
+ * It includes the same methods as the underlying `DocumentReference` object
+ * with the same behavior so that it can be used interchangeably. It also
+ * includes the following additional properties:
+ *
+ * Properties:
+ * - {@link ref `ref`}
+ */
 class DocumentWrapper<Document extends GenericFirestoreDocument, ConvertedType>
   // The `DocumentReference` class exported by Firebase has a private
   // constructor, which makes it hard to subclass it since we can't create our

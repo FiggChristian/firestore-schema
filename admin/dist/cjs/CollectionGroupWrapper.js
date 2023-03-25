@@ -6,7 +6,25 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 var _QueryWrapper = _interopRequireDefault(require("./QueryWrapper"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-/** A typed wrapper class around Firestore `CollectionGroup` objects. */
+/**
+ * A typed wrapper class around Firestore
+ * {@link FirebaseFirestore.CollectionGroup `CollectionGroup`} objects.
+ *
+ * Instances of this class are usually created automatically by calling
+ * `.collectionGroup()` on a {@link FirestoreWrapper `FirestoreWrapper`} object.
+ *
+ * ```ts
+ * const firestore = withSchema<Schema>(unwrappedFirestore);
+ * const collectionGroupWrapper = firestore.collectionGroup("collectionName");
+ * ```
+ *
+ * It includes the same methods as the underlying `CollectionGroup` object with
+ * the same behavior so that it can be used interchangeably. It also includes
+ * the following additional properties:
+ *
+ * Properties:
+ * - {@link ref `ref`}
+ */
 class CollectionGroupWrapper extends _QueryWrapper.default {
   /** The raw Firebase `CollectionGroup` instance. */
 

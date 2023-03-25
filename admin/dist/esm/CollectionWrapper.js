@@ -3,7 +3,25 @@ import "core-js/modules/esnext.iterator.map.js";
 import DocumentWrapper from "./DocumentWrapper";
 import QueryWrapper from "./QueryWrapper";
 
-/** A typed wrapper class around Firestore `CollectionReference` objects. */
+/**
+ * A typed wrapper class around Firestore
+ * {@link FirebaseFirestore.CollectionReference `CollectionReference`} objects.
+ *
+ * Instances of this class are usually created automatically by calling
+ * `.collection()` on a {@link FirestoreWrapper `FirestoreWrapper`} object.
+ *
+ * ```ts
+ * const firestore = withSchema<Schema>(unwrappedFirestore);
+ * const collectionWrapper = firestore.collection("path/to/collection");
+ * ```
+ *
+ * It includes the same methods as the underlying `CollectionReference` object
+ * with the same behavior so that it can be used interchangeably. It also
+ * includes the following additional properties:
+ *
+ * Properties:
+ * - {@link ref `ref`}
+ */
 class CollectionWrapper extends QueryWrapper
 // The `CollectionReference` class exported by Firebase has a private
 // constructor, which makes it hard to subclass it since we can't create our

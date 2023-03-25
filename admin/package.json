@@ -1,6 +1,6 @@
 {
   "name": "@firestore-schema/admin",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Enforce schema types on your Firestore database.",
   "keywords": [
     "TypeScript",
@@ -39,7 +39,7 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "@firestore-schema/core": "^0.1.2"
+    "@firestore-schema/core": "^0.1.4"
   },
   "peerDependencies": {
     "@google-cloud/firestore": "^6.4.0"

@@ -3,7 +3,25 @@ import type { SettableDocumentSchema, TypedFirestoreDataConverter } from "./type
 import type FirebaseFirestore from "@google-cloud/firestore";
 import DocumentWrapper from "./DocumentWrapper";
 import QueryWrapper from "./QueryWrapper";
-/** A typed wrapper class around Firestore `CollectionReference` objects. */
+/**
+ * A typed wrapper class around Firestore
+ * {@link FirebaseFirestore.CollectionReference `CollectionReference`} objects.
+ *
+ * Instances of this class are usually created automatically by calling
+ * `.collection()` on a {@link FirestoreWrapper `FirestoreWrapper`} object.
+ *
+ * ```ts
+ * const firestore = withSchema<Schema>(unwrappedFirestore);
+ * const collectionWrapper = firestore.collection("path/to/collection");
+ * ```
+ *
+ * It includes the same methods as the underlying `CollectionReference` object
+ * with the same behavior so that it can be used interchangeably. It also
+ * includes the following additional properties:
+ *
+ * Properties:
+ * - {@link ref `ref`}
+ */
 declare class CollectionWrapper<Collection extends GenericFirestoreCollection, ConvertedType> extends QueryWrapper<Collection, ConvertedType> implements FirebaseFirestore.CollectionReference<any> {
     /** The raw Firebase `CollectionReference` instance. */
     ref: FirebaseFirestore.CollectionReference<DefaultIfNever<ConvertedType, SchemaOfCollection<Collection>>>;

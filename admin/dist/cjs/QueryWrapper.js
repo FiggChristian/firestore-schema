@@ -5,38 +5,24 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 /**
- * A type that filters out documents from `Collection`, which can be a single
- * `Collection` or a union of `Collection`s, that do not have have the specified
- * key in their schema. This will maintain the original structure of the
- * `Collection`(s) instead of combining their results into a single `Collection`
- * object or union of many different `Collection`s.
- */
-
-/**
- * A type that filters out documents from `Collection`, which can be a single
- * `Collection` or a union of `Collection`s, that do not have have the specified
- * key in their schema, or where the associated value does not extend `Extends`.
- * This will maintain the original structure of the `Collection`(s) instead of
- * combining their results into a single `Collection` object or union of many
- * different `Collection`s.
+ * A typed wrapper class around Firestore
+ * {@link FirebaseFirestore.Query `Query`} objects.
  *
- * This type does the same as `EnsureDocumentHasKey`, with the additional check
- * that the value at the specified key extends `Extends`.
- */
-
-/**
- * A type that filters out documents from `Collection`, which can be a single
- * `Collection` or a union of `Collection`s, that do not have have the specified
- * key in their schema, or where `Extends` does not extend the associated value.
- * This will maintain the original structure of the `Collection`(s) instead of
- * combining their results into a single `Collection` object or union of many
- * different `Collection`s.
+ * Instances of this class are usually created automatically by calling
+ * different methods on a {@link FirestoreWrapper `FirestoreWrapper`} object.
  *
- * This type does the same as `EnsureDocumentHasKey`, with the additional check
- * that `Extends` extends the value at the specified key.
+ * ```ts
+ * const firestore = withSchema<Schema>(unwrappedFirestore);
+ * const queryWrapper = firestore.collectionGroup("collectionName").where( ... );
+ * ```
+ *
+ * It includes the same methods as the underlying `Query` object with the same
+ * behavior so that it can be used interchangeably. It also includes the
+ * following additional properties:
+ *
+ * Properties:
+ * - {@link ref `ref`}
  */
-
-/** A typed wrapper class around Firestore `Query` objects. */
 class QueryWrapper {
   /** The raw Firebase `Query` instance. */
   ref;
