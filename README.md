@@ -17,7 +17,8 @@ Firestore you're using, you'll want to use one of the following packages:
   or [`firebase-admin`](https://www.npmjs.com/package/firebase-admin). If you're
   code is running on a NodeJS server (e.g. a Cloud Function) or any other
   privileged environment, this is probably what you're using.
-- [Coming soon] `@firestore-schema/react-native` &ndash; if you're using
+- [`@firestore-schema/react-native`](./react-native#readme) &ndash; if you're
+  using
   [`@react-native-firebase/firestore`](https://www.npmjs.com/package/@react-native-firebase/firestore).
   If you're writing a React Native app, you'll either be using this package or
   the regular web SDK ([`firebase`](https://www.npmjs.com/package/firebase)).
@@ -44,5 +45,5 @@ the necessary type information for you. For more information, reference the
 README for the package you're using:
 
 - [@firestore-schema/admin](https://github.com/FiggChristian/firestore-schema/blob/admin/README.md)
-- [Coming soon] @firestore-schema/react-native
+- [@firestore-schema/react-native](https://github.com/FiggChristian/firestore-schema/blob/react-native/README.md)
 - [Coming soon] @firestore-schema/web

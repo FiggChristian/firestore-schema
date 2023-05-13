@@ -1,8 +1,8 @@
-# @firestore-schema/admin
+# @firestore-schema/react-native
 
 ## Enforce schema types on your Firestore database.
 
-[![npm version](https://img.shields.io/npm/v/@firestore-schema/admin.svg)](https://www.npmjs.org/package/@firestore-schema/admin)
+[![npm version](https://img.shields.io/npm/v/@firestore-schema/react-native.svg)](https://www.npmjs.org/package/@firestore-schema/react-native)
 
 This is an npm package for defining and enforcing a schema on your Firestore
 database in your JavaScript/TypeScript code. This package gives your collections
@@ -10,17 +10,15 @@ and documents more specific types that let you write safer code for interacting
 with your Firestore database.
 
 > This package is a plugin for the
-> [`@google-cloud/firestore`](https://www.npmjs.com/package/@google-cloud/firestore)
-> package or for the
-> [`firebase-admin`](https://www.npmjs.com/package/firebase-admin) SDK. If
-> you're using another package to access Firestore, you can [find the
-> appropriate `@firestore-schema/*` package
+> [`@react-native-firebase/firestore`](https://www.npmjs.com/package/@react-native-firebase/firestore)
+> package. If you're using another package to access Firestore, you can [find
+> the appropriate `@firestore-schema/*` package
 > here](https://github.com/FiggChristian/firestore-schema/blob/main/docs/Which-package-should-you-use.md).
 
 ## Installation
 
 ```bash
-npm install @firestore-schema/admin
+npm install @firestore-schema/react-native
 ```
 
 ## Usage
@@ -34,7 +32,7 @@ In a new TypeScript `.ts` file, declare and export a new type that matches the
 following general structure (but that reflects your actual database schema):
 
 ```typescript
-import { DOCUMENT_SCHEMA } from '@firestore-schema/admin';
+import { DOCUMENT_SCHEMA } from '@firestore-schema/react-native';
 
 type Schema = {
   // The top-level nesting contains collection names:
@@ -88,7 +86,7 @@ Once you've defined your Firestore schema, you can wrap your Firestore instance
 using the `withSchema` function, passing the schema type information with it:
 
 ```typescript
-import { withSchema } from '@firestore-schema/admin';
+import { withSchema } from '@firestore-schema/react-native';
 
 // Pass your schema as a generic to the withSchema function as below:
 const firestore = withSchema<Schema>(new Firestore());
@@ -101,9 +99,8 @@ wrapper class that handles all the type information stored in your schema.
 ## Example
 
 ```typescript
-import { Firestore, Timestamp } from '@google-cloud/firestore';
-// or: import { getFirestore } from 'firebase-admin';
-import { DOCUMENT_SCHEMA, withSchema } from '@firestore-schema/admin';
+import untypedFirestore from '@react-native-firebase/firestore';
+import { DOCUMENT_SCHEMA, withSchema } from '@firestore-schema/react-native';
 
 type Schema = {
   users: {
@@ -139,7 +136,7 @@ type Schema = {
 }
 
 // Wrap the original Firestore instance with the schema type information:
-const firestore = withSchema<Schema>(new Firestore());
+const firestore = withSchema<Schema>(untypedFirestore());
 
 const userID: string = getSomeUserIDSomehow();
 const postID: string = getSomePostIDSomehow();

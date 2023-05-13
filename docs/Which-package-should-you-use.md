@@ -25,7 +25,7 @@ package (on the right).
     </tr>
     <tr>
       <td><code>@react-native-firebase/firestore</code></td>
-      <td><code>@firestore-schema/react-native</code> [Coming soon]</td>
+      <td><a href="https://npmjs.com/package/@firestore-schema/react-native"><code>@firestore-schema/react-native</code></a></td>
     </tr>
     <tr>
       <td><code>firebase</code></td>

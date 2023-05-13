@@ -23,7 +23,7 @@ import QueryWrapper from "./QueryWrapper";
  * {@link ReadWriteTransactionWrapper `ReadWriteTransactionWrapper`}.
  *
  * Instances of this class are usually created automatically by calling
- * `.runTransaction()` on a {@link FirestoreWrapper `runTransaction`} object.
+ * `.runTransaction()` on a {@link FirestoreWrapper `FirestoreWrapper`} object.
  *
  * ```ts
  * const firestore = withSchema<Schema>(unwrappedFirestore);
@@ -33,8 +33,8 @@ import QueryWrapper from "./QueryWrapper";
  * It includes most of the same methods as the underlying `Transaction` object
  * with the same behavior so that it can be used interchangeably. Methods that
  * would only be available in a read-write transaction are omitted since they
- * throw errors at runtime. It also includes the following additional properties
- * :
+ * throw errors at runtime. It also includes the following additional
+ * properties:
  *
  * Properties:
  * - {@link ref `ref`}
@@ -252,16 +252,16 @@ export class ReadOnlyTransactionWrapper
  * {@link ReadOnlyTransactionWrapper `ReadOnlyTransactionWrapper`}.
  *
  * Instances of this class are usually created automatically by calling
- * `.runTransaction()` on a {@link FirestoreWrapper `runTransaction`} object.
+ * `.runTransaction()` on a {@link FirestoreWrapper `FirestoreWrapper`} object.
  *
  * ```ts
  * const firestore = withSchema<Schema>(unwrappedFirestore);
  * firestore.runTransaction((wrappedTransaction) => { ... });
  * ```
  *
- * It includes the same methods as the underlying `DocumentReference` object
- * with the same behavior so that it can be used interchangeably. It also
- * includes the following additional properties:
+ * It includes the same methods as the underlying `Transaction` object with the
+ * same behavior so that it can be used interchangeably. It also includes the
+ * following additional properties:
  *
  * Properties:
  * - {@link ref `ref`}
